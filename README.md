@@ -26,7 +26,7 @@ Customer gives cash → shopkeeper scans QR using our app → payment is stored 
 
 Simple. Reliable. Offline.
 
-## 🧪 How to Run (For Developers)
+##  How to Run (For Developers)
 
 1. Clone the project:
    `git clone https://github.com/Sumit191105/amazon-seva-pay.git`
@@ -40,7 +40,7 @@ Simple. Reliable. Offline.
 
 ### 6. Team & Contact
 ```markdown
-## 👤 Built By
+##  Built By
 
 Khushi Deshwal
 Sumit Verma
