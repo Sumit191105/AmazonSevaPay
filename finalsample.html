@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Seva Pay Prototype</title>
+  <link href="https://fonts.cdnfonts.com/css/amazon-ember" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Amazon Ember', Arial, sans-serif;
+      background-color: #f3f3f3;
+    }
+  .navbar {
+    background-color: #131921;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+  }
+  .navbar img {
+    height: 30px;
+    margin-right: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  h1, h2 {
+    color: #111;
+  }
+  .highlight {
+    background-color: #f0c14b;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    border: 1px solid #a88734;
+    color: #111;
+    font-weight: bold;
+  }
+  .card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 6px;
+    background-color: #fff;
+  }
+  ul { padding-left: 20px; }
+  code, pre {
+    background-color: #eee;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  .unlock-btn {
+    display: block;
+    width: 200px;
+    margin: 40px auto;
+    padding: 15px;
+    font-size: 16px;
+    background-color: #ff9900;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+  }
+  .modal-content {
+    background: white;
+    margin: 5% auto;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 8px;
+    padding: 40px 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    font-family: 'Amazon Ember', Arial, sans-serif;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .modal h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #111;
+    text-align: center;
+  }
+  .tab-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+  }
+  .tab-buttons button {
+    background: none;
+    border: none;
+    color: #007185;
+    font-size: 14px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  .tab-buttons button.active {
+    border-bottom: 2px solid #f0c14b;
+    font-weight: bold;
+  }
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .tab-content button {
+    background-color: #f0c14b;
+    border: 1px solid #a88734;
+    padding: 10px;
+    width: 100%;
+    color: #111;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .transaction-item {
+    background: #f7f7f7;
+    padding: 10px;
+    margin: 10px 0;
+    border-left: 4px solid #ffa500;
+  }
+  .arch-img {
+    width: 100%;
+    max-width: 600px;
+    display: block;
+    margin: 15px auto;
+    border-radius: 6px;
+    background: #eee;
+    border: 1px solid #ddd;
+  }
+  .why-cash {
+    background: #fffbe6;
+    border-left: 4px solid #f0c14b;
+    padding: 12px;
+    margin: 18px 0;
+    font-size: 15px;
+  }
+  .goal-box {
+    background: #f0c14b;
+    color: #222;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    margin-top: 28px;
+    border: 1px solid #a88734;
+    font-size: 17px;
+  }
+  .role-btn {
+    width: 100%;
+    margin: 12px 0;
+    padding: 15px 0;
+    background: #f0c14b;
+    color: #111;
+    border: 1px solid #a88734;
+    border-radius: 7px;
+    font-size: 1.15em;
+    font-weight: bold;
+    cursor: pointer;
+    display: block;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    letter-spacing: 0.01em;
+  }
+  .role-btn:hover, .role-btn:focus {
+    background: #ffb700;
+    outline: none;
+  }
+  #roleModal .modal-content {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    .navbar {
+      background-color: #131921;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+    }
+    .navbar img {
+      height: 30px;
+      margin-right: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: #111;
+    }
+    .highlight {
+      background-color: #f0c14b;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      border: 1px solid #a88734;
+      color: #111;
+      font-weight: bold;
+    }
+    .card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+    ul { padding-left: 20px; }
+    code, pre {
+      background-color: #eee;
+      padding: 10px;
+      display: block;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    .unlock-btn {
+      display: block;
+      width: 200px;
+      margin: 40px auto;
+      padding: 15px;
+      font-size: 16px;
+      background-color: #ff9900;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background: white;
+      margin: 5% auto;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 8px;
+      padding: 40px 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      font-family: 'Amazon Ember', Arial, sans-serif;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .modal h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #111;
+      text-align: center;
+    }
+    .tab-buttons {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab-buttons button {
+      background: none;
+      border: none;
+      color: #007185;
+      font-size: 14px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .tab-buttons button.active {
+      border-bottom: 2px solid #f0c14b;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .tab-content button {
+      background-color: #f0c14b;
+      border: 1px solid #a88734;
+      padding: 10px;
+      width: 100%;
+      color: #111;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .transaction-item {
+      background: #f7f7f7;
+      padding: 10px;
+      margin: 10px 0;
+      border-left: 4px solid #ffa500;
+    }
+    .arch-img {
+      width: 100%;
+      max-width: 600px;
+      display: block;
+      margin: 15px auto;
+      border-radius: 6px;
+      background: #eee;
+      border: 1px solid #ddd;
+    }
+    .why-cash {
+      background: #fffbe6;
+      border-left: 4px solid #f0c14b;
+      padding: 12px;
+      margin: 18px 0;
+      font-size: 15px;
+    }
+    .goal-box {
+      background: #f0c14b;
+      color: #222;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      margin-top: 28px;
+      border: 1px solid #a88734;
+      font-size: 17px;
+    }
+    .role-btn {
+      width: 100%;
+      margin: 12px 0;
+      padding: 15px 0;
+      background: #f0c14b;
+      color: #111;
+      border: 1px solid #a88734;
+      border-radius: 7px;
+      font-size: 1.15em;
+      font-weight: bold;
+      cursor: pointer;
+      display: block;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      letter-spacing: 0.01em;
+    }
+    .role-btn:hover, .role-btn:focus {
+      background: #ffb700;
+      outline: none;
+    }
+    #roleModal .modal-content {
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+    /* Admin Table */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      font-size: 15px;
+    }
+    .admin-table th, .admin-table td {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    .admin-table th {
+      background: #232f3e;
+      color: #f0c14b;
+      font-weight: bold;
+    }
+    .admin-table tr:nth-child(even) {
+      background: #f7f7f7;
+    }
+    .admin-table tr:hover {
+      background: #ffe599;
+    }
+    .amazon-btn {
+        background: #f0c14b;
+        color: #111;
+        border: 1px solid #a88734;
+        border-radius: 7px;
+        font-weight: bold;
+        padding: 12px 24px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .amazon-btn:hover {
+        background: #ffb700;
+      }
+      
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon Logo">
+    <div style="flex:1; font-weight: bold; font-size: 18px;">Amazon Seva Pay</div>
+    <div>Hello, User</div>
+  </div>
+  <!-- ROLE MODAL -->
+  <div id="roleModal" class="modal">
+    <div class="modal-content" style="text-align:center; max-width:350px;">
+      <button class="modal-close" onclick="document.getElementById('roleModal').style.display='none'" aria-label="Close">✕</button>
+      <h2 style="margin-bottom:30px; font-size:1.5em; font-weight:700;">Choose Your Role</h2>
+      <button class="role-btn" onclick="chooseRole('customer')">Customer</button>
+      <button class="role-btn" onclick="chooseRole('ambassador')">Ambassador</button>
+      <button class="role-btn" onclick="chooseRole('admin')">Admin</button>
+    </div>
+  </div>
+  <div id="roleModal" class="modal">
+</div>
+
+
+  <div class="container">
+    <h1>Amazon Seva Pay: Offline Smart Payment System for Rural India</h1>
+    <div class="highlight">Turning every tea stall into an Amazon gateway - even without internet.</div>
+    
+    <h2>Unique Selling Points</h2>
+    <ul>
+      <li>Works 100% offline for 72+ hours</li>
+      <li>Uses existing local businesses as payment points</li>
+      <li>Rural entrepreneurs earn ₹3-5 per transaction</li>
+      <li>Needs only basic Android phones (Android 6+)</li>
+      <li>Mesh Sync Tech & AI fraud detection</li>
+    </ul>
+
+    <h2>Visual Story</h2>
+    <div class="card">
+      <b>It's 8PM in Banda.</b> Priya wants to buy a phone case on Amazon. Her phone shows "No Network." She walks to Ramesh's tea stall, pays ₹299 cash. Ramesh scans her QR using the Ambassador App (offline). Transaction done. When the network 
+    </div>
+
+    <h2>Problem Statement</h2>
+    <ul>
+      <li>67% rural India lacks reliable internet</li>
+      <li>Amazon loses 1,200+ crores in failed deliveries</li>
+      <li>Payment failures, COD risk, monsoon issues</li>
+    </ul>
+
+    <h2>Solution: Amazon Seva Pay</h2>
+    <ul>
+      <li>Customer shows QR</li>
+      <li>Ambassador scans & accepts cash</li>
+      <li>Transaction stored offline</li>
+      <li>Auto-sync on connectivity</li>
+      <li>Commission credited instantly</li>
+    </ul>
+
+    <h2>Architecture Overview</h2>
+    <pre>
+Customer App       Ambassador App
+• QR Generator     • QR Scanner
+• Order Display    • Cash Handling
+• Offline Mode     • Local Storage
+       |                 |
+       └────┬─────┘
+           Local SQLite DB
+           • Tx Queue
+           • Signatures
+           • Ambassador Data
+       └────┬─────┬────┘
+        MeshNet  SMS  Internet
+           │       │      │
+       Amazon Cloud Server
+       • Processing, ML & Sync
+    </pre>
+
+
+    <h2>Core Features</h2>
+    <ul>
+      <li>Offline-first with SQLite</li>
+      <li>QR & NFC capability</li>
+      <li>Rural-optimized fraud detection</li>
+      <li>Real-time Ambassador earnings</li>
+      <li>Mesh sync + SMS backup</li>
+    </ul>
+
+    <h2>Technology Stack</h2>
+    <ul>
+      <li>React Native, SQLite</li>
+      <li>Node.js + Firebase/MongoDB</li>
+      <li>Twilio (SMS), QR libs</li>
+      <li>AWS backend, TensorFlow Lite</li>
+    </ul>
+
+    <h2>Why Not Just Use Cash?</h2>
+    <div class="why-cash">
+      Cash is useless without digital confirmation. Amazon needs a digital greenlight to ship. We make cash smart: local cash → digital sync → Amazon confirms. Offline doesn’t mean disconnected.
+    </div>
+
+    <div class="goal-box">
+      Make internet outages irrelevant for payments. Unlock rural India’s economy.
+    </div>
+
+    <button class="unlock-btn" onclick="document.getElementById('roleModal').style.display='block'">🔓 Unlock Prototype</button>
+    </div>
+
+  <!-- MAIN PROTOTYPE MODAL -->
+  <div id="popupModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="document.getElementById('popupModal').style.display='none'">✕</button>
+      <div class="tab-buttons">
+        <button class="active" onclick="showTab('customer')">Customer</button>
+        <button onclick="showTab('ambassador')">Ambassador</button>
+        <button onclick="showTab('admin')">Admin</button>
+      </div>
+
+      <!-- Customer Tab -->
+      <div id="customer" class="tab-content active">
+        <h2>Customer - Generate Order QR</h2>
+        <label>Name</label>
+        <input id="name" type="text" placeholder="Enter your name" />
+        <label>Phone</label>
+        <input id="phone" type="text" placeholder="Enter your phone number" />
+        <label>Product ID</label>
+        <input id="product" type="text" placeholder="Enter product ID" />
+        <label>Amount</label>
+        <input id="amount" type="number" placeholder="Enter amount" />
+        <button onclick="generateQR()">Generate QR</button>
+        <div id="qrcode"><canvas id="qr-canvas"></canvas></div>
+        <div id="qr-json" style="margin-top:10px;font-size:12px;color:#555;"></div>
+      </div>
+
+      <!-- Ambassador Tab -->
+      <div id="ambassador" class="tab-content">
+        <h2>Ambassador - Process Payment</h2>
+        <label>Paste QR Data (for demo)</label>
+        <textarea id="qrdata" rows="4" placeholder='Paste QR JSON data here'></textarea>
+        <label>Ambassador Name</label>
+        <input id="ambassadorName" type="text" placeholder="Enter your name (Ambassador)">
+        <button onclick="processQRData()">Process Payment</button>
+        <h2>Pending Transactions</h2>
+        <button onclick="syncTransactions()">Sync Transactions</button>
+        <div class="transactions" id="transactions"></div>
+        <!-- Ambassador Stats Dashboard -->
+        <h2 style="color:#131921; font-weight:700; margin:24px 0 12px 0;">Ambassador Dashboard</h2>
+        <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:140px; background:#232f3e; color:#fff; border-radius:8px; padding:18px 14px; box-shadow:0 2px 8px #0001;">
+            <div style="font-size:1.2em; font-weight:bold;">₹<span id="amb-total-earnings">0</span></div>
+            <div style="font-size:0.95em; color:#f0c14b;">Total Earnings</div>
+          </div>
+          <div style="flex:1; min-width:140px; background:#232f3e; color:#fff; border-radius:8px; padding:18px 14px; box-shadow:0 2px 8px #0001;">
+            <div style="font-size:1.2em; font-weight:bold;"><span id="amb-total-tx">0</span></div>
+            <div style="font-size:0.95em; color:#f0c14b;">Transactions</div>
+          </div>
+          <div style="flex:1; min-width:140px; background:#232f3e; color:#fff; border-radius:8px; padding:18px 14px; box-shadow:0 2px 8px #0001;">
+            <div style="font-size:1.2em; font-weight:bold;">₹<span id="amb-today-earnings">0</span></div>
+            <div style="font-size:0.95em; color:#f0c14b;">Today's Earnings</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:18px;">
+          <button style="flex:1; background:#f0c14b; color:#111; border:1px solid #a88734; border-radius:6px; font-weight:bold; padding:12px; cursor:pointer;" onclick="simulateQRScan()">📱 Scan QR Code</button>
+          <button style="flex:1; background:#232f3e; color:#fff; border:1px solid #131921; border-radius:6px; font-weight:bold; padding:12px; cursor:pointer;" onclick="toggleManualEntry()">✍️ Manual Entry</button>
+        </div>
+        <div id="manualEntryForm" style="display:none; margin-bottom:18px;">
+          <label>Customer Name</label>
+          <input id="manualCustomer" type="text" placeholder="Enter customer name" />
+          <label>Product ID</label>
+          <input id="manualProduct" type="text" placeholder="Enter product ID" />
+          <label>Amount</label>
+          <input id="manualAmount" type="number" placeholder="Enter amount" />
+          <button style="background:#f0c14b; color:#111; border:1px solid #a88734; border-radius:6px; font-weight:bold; padding:10px; width:100%; margin-top:8px;" onclick="processManualPayment()">Process Payment</button>
+        </div>
+        <h3 style="margin-top:18px; color:#232f3e;">Recent Transactions</h3>
+        <div id="amb-tx-list" style="margin-top:10px;"></div>
+        <div id="amb-notify" style="display:none; position:fixed; top:20px; right:20px; background:#232f3e; color:#fff; padding:16px 24px; border-radius:8px; font-weight:bold; box-shadow:0 2px 8px #0003; z-index:2000;"></div>
+      </div>
+
+      <!-- Admin Tab -->
+      <div id="admin" class="tab-content">
+        <h2>Admin Dashboard: Ambassador Earnings by Product ID</h2>
+        <div id="admin-earnings-table" style="margin-top:20px;"></div>
+        <button id="download-today-report" style="background:#f0c14b; color:#111; border:1px solid #a88734; border-radius:6px; font-weight:bold; padding:10px 18px; margin-bottom:18px; cursor:pointer;">
+             Download Today's Earnings Report
+          </button>
+          
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script>
+    const secretKey = "seva123";
+    let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+    let ambEarnings = 0;
+    let ambTodayEarnings = 0;
+    let ambTxCount = 0;
+    let ambTxList = [];
+
+    document.getElementById('download-today-report').onclick = function() {
+        let allTx = [];
+        try {
+          allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+        } catch { allTx = []; }
+      
+        // Get today's date string
+        const todayStr = new Date().toLocaleDateString();
+      
+        // Group earnings by ambassador for today
+        const earningsToday = {};
+        allTx.forEach(tx => {
+          const ambassador = tx.ambassador || "Ambassador 1";
+          const txDate = new Date(tx.time).toLocaleDateString();
+          if (txDate === todayStr) {
+            if (!earningsToday[ambassador]) earningsToday[ambassador] = 0;
+            earningsToday[ambassador] += parseFloat(tx.commission || 0);
+          }
+        });
+      
+        // Build CSV
+        let csv = "Ambassador,Today's Earnings (₹)\n";
+        Object.keys(earningsToday).forEach(amb => {
+          csv += `${amb},${earningsToday[amb].toFixed(2)}\n`;
+        });
+        if (Object.keys(earningsToday).length === 0) {
+          csv += "No earnings today,0\n";
+        }
+      
+        // Download as CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `amazon-seva-pay-today-earnings-${todayStr.replace(/\//g,'-')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      if (tabId === 'admin') renderAdminEarningsTable();
+      if (tabId === 'ambassador') updateAmbDashboard();
+    }
+
+    function chooseRole(role) {
+      document.getElementById('roleModal').style.display = 'none';
+      document.getElementById('popupModal').style.display = 'block';
+      showTab(role);
+    }
+
+    function generateQR() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const product = document.getElementById("product").value.trim();
+      const amount = document.getElementById("amount").value.trim();
+
+      if (!name || !phone || !product || !amount) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      const data = `${name}|${phone}|${product}|${amount}`;
+      const signature = btoa(data + secretKey);
+
+      const qrObj = { name, phone, product, amount, signature };
+
+      new QRious({
+        element: document.getElementById("qr-canvas"),
+        value: JSON.stringify(qrObj),
+        size: 200
+      });
+
+      document.getElementById("qr-json").innerText = JSON.stringify(qrObj);
+    }
+
+    function processQRData() {
+      const qrData = document.getElementById("qrdata").value.trim();
+      const ambassador = document.getElementById("ambassadorName").value.trim() || "Ambassador 1";
+      if (!qrData) {
+        alert("Please paste QR data");
+        return;
+      }
+      try {
+        const tx = JSON.parse(qrData);
+        const verifySig = btoa(`${tx.name}|${tx.phone}|${tx.product}|${tx.amount}` + secretKey);
+        if (tx.signature === verifySig) {
+          // Save with ambassador and commission info
+          const commission = parseFloat(tx.amount) * 0.02;
+          const txObj = {
+            ambassador,
+            name: tx.name,
+            phone: tx.phone,
+            product: tx.product,
+            amount: tx.amount,
+            commission,
+            time: new Date().toLocaleString()
+          };
+          transactions.push(txObj);
+          localStorage.setItem("transactions", JSON.stringify(transactions));
+          alert("Transaction Stored Offline");
+          document.getElementById("qrdata").value = "";
+          displayTransactions();
+          updateAmbDashboard();
+        } else {
+          alert("Invalid Signature - Fraud suspected");
+        }
+      } catch {
+        alert("Invalid QR data");
+      }
+    }
+
+    function syncTransactions() {
+      if (!navigator.onLine) {
+        alert("No Internet Connection");
+        return;
+      }
+      const txDiv = document.getElementById("transactions");
+      txDiv.innerHTML = "";
+      transactions.forEach(tx => {
+        txDiv.innerHTML += `<div class='transaction-item'>
+          Order from ${tx.name} for ₹${tx.amount} - Synced ✅<br/>
+          Commission Earned: ₹${parseFloat(tx.commission).toFixed(2)}
+        </div>`;
+      });
+      localStorage.removeItem("transactions");
+      transactions = [];
+      updateAmbDashboard();
+    }
+
+    function displayTransactions() {
+      const txDiv = document.getElementById("transactions");
+      txDiv.innerHTML = "";
+      transactions.forEach(tx => {
+        txDiv.innerHTML += `<div class='transaction-item'>
+          Order from ${tx.name} for ₹${tx.amount} - Pending
+        </div>`;
+      });
+    }
+
+    // Ambassador Dashboard Logic
+    function updateAmbDashboard() {
+      const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
+      // Filter transactions for this ambassador
+      const now = new Date();
+      ambTxList = transactions.filter(tx => tx.ambassador === ambassador);
+      ambEarnings = ambTxList.reduce((sum, tx) => sum + (parseFloat(tx.commission) || 0), 0);
+      ambTodayEarnings = ambTxList.filter(tx => {
+        const txDate = new Date(tx.time);
+        return txDate.toDateString() === now.toDateString();
+      }).reduce((sum, tx) => sum + (parseFloat(tx.commission) || 0), 0);
+      ambTxCount = ambTxList.length;
+      document.getElementById('amb-total-earnings').textContent = ambEarnings.toFixed(2);
+      document.getElementById('amb-today-earnings').textContent = ambTodayEarnings.toFixed(2);
+      document.getElementById('amb-total-tx').textContent = ambTxCount;
+      renderAmbTxList();
+    }
+
+    function renderAmbTxList() {
+      const txDiv = document.getElementById('amb-tx-list');
+      if (!ambTxList.length) {
+        txDiv.innerHTML = "<div style='color:#888; text-align:center;'>No transactions yet</div>";
+        return;
+      }
+      txDiv.innerHTML = ambTxList.slice(0,10).map(tx => `
+        <div class="transaction-item" style="border-left:4px solid #f0c14b;">
+          <div><b>${tx.name}</b> • ₹${tx.amount} <span style="color:#888; font-size:0.95em;">(${tx.product})</span></div>
+          <div style="font-size:0.95em; color:#666;">${tx.time}</div>
+          <div style="font-size:0.95em; color:#28a745;">Commission: ₹${parseFloat(tx.commission).toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    // Ambassador Mode: Simulate QR Scan
+    function simulateQRScan() {
+      const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
+      const customer = "Customer " + (Math.floor(Math.random()*900)+100);
+      const product = "P" + (Math.floor(Math.random()*9000)+1000);
+      const amount = Math.floor(Math.random()*400)+100;
+      const commission = amount * 0.02;
+      const tx = {
+        ambassador,
+        name: customer,
+        product,
+        amount,
+        commission,
+        time: new Date().toLocaleString()
+      };
+      transactions.push(tx);
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+      updateAmbDashboard();
+      ambNotify(`Payment processed: ₹${amount} (Commission: ₹${commission.toFixed(2)})`);
+    }
+
+    // Manual Entry Toggle
+    function toggleManualEntry() {
+      const form = document.getElementById('manualEntryForm');
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    }
+
+    // Manual Payment
+    function processManualPayment() {
+      const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
+      const customer = document.getElementById('manualCustomer').value.trim();
+      const product = document.getElementById('manualProduct').value.trim();
+      const amount = parseFloat(document.getElementById('manualAmount').value);
+      if (!customer || !amount || amount <= 0 || !product) {
+        ambNotify("Please enter valid customer, product, and amount", true);
+        return;
+      }
+      const commission = amount * 0.02;
+      const tx = {
+        ambassador,
+        name: customer,
+        product,
+        amount,
+        commission,
+        time: new Date().toLocaleString()
+      };
+      transactions.push(tx);
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+      updateAmbDashboard();
+      ambNotify(`Payment processed: ₹${amount} (Commission: ₹${commission.toFixed(2)})`);
+      document.getElementById('manualCustomer').value = "";
+      document.getElementById('manualProduct').value = "";
+      document.getElementById('manualAmount').value = "";
+      document.getElementById('manualEntryForm').style.display = "none";
+    }
+
+    // Amazon-Style Notification
+    function ambNotify(msg, error) {
+      const n = document.getElementById('amb-notify');
+      n.textContent = msg;
+      n.style.background = error ? "#b12704" : "#232f3e";
+      n.style.display = "block";
+      setTimeout(()=>{ n.style.display="none"; }, 2500);
+    }
+
+    // Admin Dashboard: Earnings by Ambassador and Product ID
+    function renderAdminEarningsTable() {
+      let allTx = [];
+      try {
+        allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+      } catch { allTx = []; }
+      // Group by ambassador and product
+      const earningsMap = {};
+      allTx.forEach(tx => {
+        const ambassador = tx.ambassador || "Ambassador 1";
+        const product = tx.product || tx.productId || "Unknown";
+        const commission = parseFloat(tx.commission || 3);
+        if (!earningsMap[ambassador]) earningsMap[ambassador] = {};
+        if (!earningsMap[ambassador][product]) earningsMap[ambassador][product] = 0;
+        earningsMap[ambassador][product] += commission;
+      });
+      // Build table HTML
+      let html = `<table class="admin-table">
+        <tr>
+          <th>Ambassador</th>
+          <th>Product ID</th>
+          <th>Total Earnings (₹)</th>
+        </tr>`;
+      let found = false;
+      Object.keys(earningsMap).forEach(amb => {
+        Object.keys(earningsMap[amb]).forEach(prod => {
+          found = true;
+          html += `<tr>
+            <td>${amb}</td>
+            <td>${prod}</td>
+            <td>₹${earningsMap[amb][prod].toFixed(2)}</td>
+          </tr>`;
+        });
+      });
+      if (!found) {
+        html += `<tr><td colspan="3" style="text-align:center; color:#888;">No earnings data available</td></tr>`;
+      }
+      html += `</table>`;
+      document.getElementById('admin-earnings-table').innerHTML = html;
+    }
+
+    // Display pending transactions on load
+    window.onload = displayTransactions;
+  </script>
+</body>
+</html>
