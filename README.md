@@ -126,4 +126,6 @@ Telemedicine consultation fees
 Emergency service payments
 Healthcare insurance claims
 
+-> A Walk Through - https://drive.google.com/file/d/1cRmMgZZB9qR-OsK78zDXkX16WF1AXTQ6/view?usp=sharing 
+
 The Ultimate Vision: Transform every rural touchpoint into a digital commerce gateway, creating India's largest distributed payment infrastructure powered by community economics. Make internet outages irrelevant for digital payments, ensuring connectivity never again stands between rural India and economic opportunity.
