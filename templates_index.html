@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Seva Pay - Digital Payments for Rural India</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF9900 0%, #232F3E 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            font-style: italic;
+            margin-bottom: 50px;
+            opacity: 0.8;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: #232F3E;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .app-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 50px 0;
+            flex-wrap: wrap;
+        }
+
+        .app-btn {
+            background: linear-gradient(45deg, #FF9900, #FFB84D);
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+        }
+
+        .app-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 153, 0, 0.6);
+        }
+
+        .app-btn.secondary {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .app-btn.secondary:hover {
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
+        }
+
+        .demo-btn {
+            background: linear-gradient(45deg, #2196F3, #42A5F5);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .demo-btn:hover {
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 50px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .stat-item {
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .network-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .network-status.offline {
+            background: #f44336;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            margin-top: 60px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+            }
+            
+            .app-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .app-btn {
+                width: 280px;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="network-status" id="networkStatus">
+        🌐 Online
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🛍️ Amazon Seva Pay</h1>
+            <p>Bridging the Digital Divide - Offline Payment System for Rural India</p>
+            <div class="tagline">"Every Chai Stall Becomes an Amazon Gateway"</div>
+            
+            <div class="loading" id="loadingStats">
+                <div class="spinner"></div>
+                Loading stats...
+            </div>
+        </div>
+
+        <div class="stats-section" id="statsSection">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalCustomers">0</span>
+                    <span class="stat-label">Active Customers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="activeAmbassadors">0</span>
+                    <span class="stat-label">Payment Ambassadors</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="completedTransactions">0</span>
+                    <span class="stat-label">Successful Transactions</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="successRate">0%</span>
+                    <span class="stat-label">Success Rate</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Offline-First Design</h3>
+                <p>Works seamlessly without internet connection. Generate QR codes and process payments even when network is down.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🤝</div>
+                <h3>Community-Powered</h3>
+                <p>Local businesses become Payment Ambassadors, earning commission while serving their community.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure & Trusted</h3>
+                <p>Advanced encryption and community trust ensure safe transactions with fraud detection.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>30-Second Transactions</h3>
+                <p>Fast, efficient payments that work faster than traditional payment apps.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Rural Focus</h3>
+                <p>Specifically designed for India's 400M rural population with basic smartphones.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Win-Win-Win</h3>
+                <p>Benefits customers, ambassadors, and Amazon with sustainable revenue model.</p>
+            </div>
+        </div>
+
+        <div class="app-buttons">
+            <a href="/customer" class="app-btn">
+                👤 Customer App
+            </a>
+            <a href="/ambassador" class="app-btn secondary">
+                🏪 Ambassador App
+            </a>
+            <a href="/demo" class="app-btn demo-btn">
+                🎬 Live Demo
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Amazon Seva Pay | Hackathon Prototype | Built with ❤️ for Rural India</p>
+        </div>
+    </div>
+
+    <script>
+        // Network status simulation
+        function updateNetworkStatus() {
+            const status = document.getElementById('networkStatus');
+            const isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                status.innerHTML = '🌐 Online';
+                status.className = 'network-status';
+            } else {
+                status.innerHTML = '📴 Offline Mode';
+                status.className = 'network-status offline';
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            const loading = document.getElementById('loadingStats');
+            const statsSection = document.getElementById('statsSection');
+            
+            loading.style.display = 'block';
+            statsSection.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalCustomers').textContent = data.stats.total_customers;
+                    document.getElementById('activeAmbassadors').textContent = data.stats.active_ambassadors;
+                    document.getElementById('completedTransactions').textContent = data.stats.completed_transactions;
+                    document.getElementById('successRate').textContent = data.stats.success_rate + '%';
+                }
+            } catch (error) {
+                console.log('Stats loading failed, using demo data');
+                // Fallback demo data
+                document.getElementById('totalCustomers').textContent = '1,250';
+                document.getElementById('activeAmbassadors').textContent = '156';
+                document.getElementById('completedTransactions').textContent = '3,420';
+                document.getElementById('successRate').textContent = '95.2%';
+            }
+            
+            loading.style.display = 'none';
+            statsSection.style.opacity = '1';
+        }
+
+        // Animate numbers
+        function animateNumber(element, target) {
+            const duration = 2000;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            updateNetworkStatus();
+            loadStats();
+        });
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+	<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    </script>
+</body>
+</html>
