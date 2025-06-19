@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador App - Amazon Seva Pay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #232F3E;
+            margin-bottom: 10px;
+        }
+
+        .network-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .online { background: #4CAF50; color: white; }
+        .offline { background: #f44336; color: white; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .login-form, .payment-scanner, .earnings-dashboard {
+            display: none;
+        }
+
+        .login-form.active, .payment-scanner.active, .earnings-dashboard.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #232F3E;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #2196F3, #42A5F5);
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #ef5350);
+        }
+
+        .earnings-card {
+            background: linear-gradient(45deg, #FF9800, #FFB74D);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .earnings-amount {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .qr-scanner {
+            background: #f8f9fa;
+            border: 3px dashed #4CAF50;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .qr-scanner:hover {
+            background: #e8f5e8;
+            border-color: #45a049;
+        }
+
+        .qr-scanner.active {
+            background: #e8f5e8;
+            border-style: solid;
+        }
+
+        .payment-details {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .payment-details.show {
+            display: block;
+        }
+
+        .cash-input {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .payment-success {
+            background: #e8f5e8;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .payment-success.show {
+            display: block;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .commission-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #232F3E;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .welcome-message {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .earnings-amount {
+                font-size: 2em;
+            }
+
+            .back-btn {
+                position: relative;
+                top: 0;
+                left: 0;
+                display: inline-block;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Payment Ambassador</h1>
+            <p>Earn commission by helping customers pay</p>
+            <div class="network-status" id="networkStatus">🌐 Online</div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="card login-form active" id="loginForm">
+            <h2>Ambassador Login</h2>
+            <p>Enter your phone number to access your dashboard</p>
+            
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phoneInput" placeholder="Enter 10-digit phone number" maxlength="10">
+            </div>
+            
+            <button class="btn" onclick="ambassadorLogin()">Login</button>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+                <strong>Demo Login:</strong><br>
+                📞 9876543220 (Ravi Tea Stall)<br>
+                📞 9876543221 (Maya General Store)<br>
+                📞 9876543222 (Suresh Mobile Shop)
+            </div>
+        </div>
+
+        <!-- Payment Scanner -->
+        <div class="card payment-scanner" id="paymentScanner">
+            <div class="welcome-message" id="welcomeMessage">
+                Welcome back! Scan QR codes to process payments
+            </div>
+
+            <div class="earnings-card">
+                <div class="earnings-amount">₹<span id="totalEarnings">0</span></div>
+                <div>Total Earnings</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="todayTransactions">0</div>
+                    <div class="stat-label">Today's Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayEarnings">₹0</div>
+                    <div class="stat-label">Today's Earnings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="monthlyTransactions">0</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+            </div>
+
+            <h3>Scan Customer QR Code</h3>
+            <div class="qr-scanner" id="qrScannerArea" onclick="simulateQRScan()">
+                <div style="font-size: 3em; margin-bottom: 15px;">📱</div>
+                <p>Tap here to simulate QR scan</p>
+                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                    In production: Camera would open here
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Or paste QR data manually:</label>
+                <textarea id="qrDataInput" placeholder="Paste QR code data here..." rows="3"></textarea>
+            </div>
+
+            <button class="btn" onclick="processQRScan()">Process QR Code</button>
+            <button class="btn secondary" onclick="showEarnings()">View Earnings</button>
+            <button class="btn danger" onclick="logout()">Logout</button>
+
+            <!-- Payment Details -->
+            <div class="payment-details" id="paymentDetails">
+                <h3>Payment Details</h3>
+                <p><strong>Transaction ID:</strong> <span id="txnId"></span></p>
+                <p><strong>Customer:</strong> <span id="customerName"></span></p>
+                <p><strong>Amount:</strong> ₹<span id="paymentAmount"></span></p>
+                <p><strong>Product:</strong> <span id="productDetails"></span></p>
+                <p><strong>Your Commission:</strong> ₹<span id="commissionAmount"></span></p>
+
+                <div class="cash-input">
+                    <div class="form-group">
+                        <label>Cash Received from Customer (₹)</label>
+                        <input type="number" id="cashReceived" placeholder="Enter cash amount" step="0.01">
+                    </div>
+                    <button class="btn" onclick="processPayment()">Confirm Payment</button>
+                    <button class="btn secondary" onclick="cancelPayment()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Payment Success -->
+            <div class="payment-success" id="paymentSuccess">
+                <div style="font-size: 3em; margin-bottom: 15px;">✅</div>
+                <h3>Payment Successful!</h3>
+                <p><strong>Transaction ID:</strong> <span id="successTxnId"></span></p>
+                <p><strong>Amount Processed:</strong> ₹<span id="successAmount"></span></p>
+                <p><strong>Commission Earned:</strong> ₹<span id="successCommission"></span></p>
+                <p><strong>Change to Return:</strong> ₹<span id="changeAmount"></span></p>
+                
+                <button class="btn" onclick="newTransaction()" style="margin-top: 20px;">New Transaction</button>
+            </div>
+        </div>
+
+        <!-- Earnings Dashboard -->
+        <div class="card earnings-dashboard" id="earningsDashboard">
+            <h2>Earnings Dashboard</h2>
+            
+            <div class="earnings-card">
+                <div class="earnings-amount">₹<span id="dashboardEarnings">0</span></div>
+                <div>Total Commission Earned</div>
+            </div>
+
+            <h3>Recent Transactions</h3>
+            <div id="transactionList">
+                <p class="loading">Loading transactions...</p>
+            </div>
+            
+            <button class="btn" onclick="showPaymentScanner()">Back to Scanner</button>
+            <button class="btn secondary" onclick="refreshEarnings()">Refresh</button>
+        </div>
+    </div>
+
+    <script>
+        let currentAmbassador = null;
+        let currentTransaction = null;
+        let transactions = [];
+
+        // Demo data
+        const demoAmbassadors = {
+            '9876543220': {
+                id: 1,
+                name: 'Ravi Kumar',
+                phone: '9876543220',
+                business_name: 'Ravi Tea Stall',
+                total_earnings: 2450,
+                today_earnings: 180,
+                today_transactions: 8,
+                monthly_transactions: 156
+            },
+            '9876543221': {
+                id: 2,
+                name: 'Maya Sharma',
+                phone: '9876543221',
+                business_name: 'Maya General Store',
+                total_earnings: 5670,
+                today_earnings: 320,
+                today_transactions: 12,
+                monthly_transactions: 289
+            },
+            '9876543222': {
+                id: 3,
+                name: 'Suresh Patel',
+                phone: '9876543222',
+                business_name: 'Suresh Mobile Shop',
+                total_earnings: 8930,
+                today_earnings: 450,
+                today_transactions: 15,
+                monthly_transactions: 378
+            }
+        };
+
+        const demoTransactions = [
+            { id: 'TXN001', customer: 'Rahul Singh', amount: 250, commission: 12.50, product: 'Mobile Recharge', timestamp: new Date(Date.now() - 3600000) },
+            { id: 'TXN002', customer: 'Priya Gupta', amount: 180, commission: 9.00, product: 'Tea & Snacks', timestamp: new Date(Date.now() - 7200000) },
+            { id: 'TXN003', customer: 'Amit Kumar', amount: 500, commission: 25.00, product: 'Groceries', timestamp: new Date(Date.now() - 10800000) },
+            { id: 'TXN004', customer: 'Sunita Devi', amount: 75, commission: 3.75, product: 'Bus Ticket', timestamp: new Date(Date.now() - 14400000) },
+            { id: 'TXN005', customer: 'Rohit Sharma', amount: 1200, commission: 60.00, product: 'Phone Accessories', timestamp: new Date(Date.now() - 18000000) }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNetworkStatus();
+            setupEventListeners();
+            
+            // Check for saved session
+            const savedAmbassador = JSON.parse(sessionStorage.getItem('currentAmbassador') || 'null');
+            if (savedAmbassador) {
+                currentAmbassador = savedAmbassador;
+                showPaymentScanner();
+                loadStats();
+            }
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            
+            // Enter key support for login
+            document.getElementById('phoneInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    ambassadorLogin();
+                }
+            });
+
+            // Enter key support for cash input
+            document.getElementById('cashReceived').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    processPayment();
+                }
+            });
+        }
+
+        // Network status
+        function updateNetworkStatus() {
+            const status = document.getElementById('networkStatus');
+            const isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                status.innerHTML = '🌐 Online';
+                status.className = 'network-status online';
+            } else {
+                status.innerHTML = '📴 Offline Mode';
+                status.className = 'network-status offline';
+            }
+        }
+
+        // Ambassador login
+        async function ambassadorLogin() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            
+            if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+                alert('Please enter a valid 10-digit phone number');
+                return;
+            }
+            
+            try {
+                // Simulate API call with demo data
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const ambassador = demoAmbassadors[phone];
+                
+                if (ambassador) {
+                    currentAmbassador = ambassador;
+                    sessionStorage.setItem('currentAmbassador', JSON.stringify(ambassador));
+                    
+                    document.getElementById('welcomeMessage').innerHTML = 
+                        `Welcome back, ${ambassador.name}! 🏪<br><small>${ambassador.business_name}</small>`;
+                    document.getElementById('totalEarnings').textContent = ambassador.total_earnings;
+                    
+                    showPaymentScanner();
+                    loadStats();
+                } else {
+                    alert('Ambassador not found. Please check your phone number.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        }
+
+        // Load statistics
+        function loadStats() {
+            if (!currentAmbassador) return;
+            
+            document.getElementById('todayTransactions').textContent = currentAmbassador.today_transactions;
+            document.getElementById('todayEarnings').textContent = `₹${currentAmbassador.today_earnings}`;
+            document.getElementById('monthlyTransactions').textContent = currentAmbassador.monthly_transactions;
+        }
+
+        // Simulate QR scan
+        function simulateQRScan() {
+            const scanner = document.getElementById('qrScannerArea');
+            scanner.classList.add('active');
+            scanner.innerHTML = '<div style="font-size: 3em; margin-bottom: 15px;">📷</div><p>Scanning...</p>';
+            
+            setTimeout(() => {
+                const demoQRData = {
+                    customer_name: ['Rahul Singh', 'Priya Gupta', 'Amit Kumar', 'Sunita Devi', 'Rohit Sharma'][Math.floor(Math.random() * 5)],
+                    amount: [150, 250, 75, 500, 1200][Math.floor(Math.random() * 5)],
+                    product: ['Mobile Recharge', 'Tea & Snacks', 'Bus Ticket', 'Groceries', 'Phone Accessories'][Math.floor(Math.random() * 5)]
+                };
+                
+                document.getElementById('qrDataInput').value = JSON.stringify(demoQRData);
+                processQRScan();
+                
+                scanner.classList.remove('active');
+                scanner.innerHTML = '<div style="font-size: 3em; margin-bottom: 15px;">📱</div><p>Tap here to simulate QR scan</p><p style="font-size: 0.9em; color: #666; margin-top: 10px;">In production: Camera would open here</p>';
+            }, 2000);
+        }
+
+        // Process QR scan
+        function processQRScan() {
+            const qrData = document.getElementById('qrDataInput').value.trim();
+            
+            if (!qrData) {
+                alert('Please scan a QR code or paste QR data');
+                return;
+            }
+            
+            try {
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(qrData);
+                } catch {
+                    // If not JSON, treat as simple text
+                    parsedData = {
+                        customer_name: 'Walk-in Customer',
+                        amount: parseFloat(qrData) || 100,
+                        product: 'General Purchase'
+                    };
+                }
+                
+                const txnId = 'TXN' + Date.now().toString().slice(-6);
+                const commission = Math.round(parsedData.amount * 0.05 * 100) / 100; // 5% commission
+                
+                currentTransaction = {
+                    id: txnId,
+                    customer_name: parsedData.customer_name || 'Unknown Customer',
+                    amount: parsedData.amount || 0,
+                    product: parsedData.product || 'General Purchase',
+                    commission: commission
+                };
+                
+                // Show payment details
+                document.getElementById('txnId').textContent = currentTransaction.id;
+                document.getElementById('customerName').textContent = currentTransaction.customer_name;
+                document.getElementById('paymentAmount').textContent = currentTransaction.amount;
+                document.getElementById('productDetails').textContent = currentTransaction.product;
+                document.getElementById('commissionAmount').textContent = currentTransaction.commission;
+                
+                document.getElementById('paymentDetails').classList.add('show');
+                document.getElementById('cashReceived').focus();
+                
+            } catch (error) {
+                console.error('QR processing error:', error);
+                alert('Invalid QR code data. Please try again.');
+            }
+        }
+
+        // Process payment
+        function processPayment() {
+            const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+            
+            if (!cashReceived || cashReceived < currentTransaction.amount) {
+                alert('Please enter valid cash amount (minimum: ₹' + currentTransaction.amount + ')');
+                return;
+            }
+            
+            const change = Math.round((cashReceived - currentTransaction.amount) * 100) / 100;
+            
+            // Update success display
+            document.getElementById('successTxnId').textContent = currentTransaction.id;
+            document.getElementById('successAmount').textContent = currentTransaction.amount;
+            document.getElementById('successCommission').textContent = currentTransaction.commission;
+            document.getElementById('changeAmount').textContent = change;
+            
+            // Add transaction to history
+            transactions.unshift({
+                ...currentTransaction,
+                timestamp: new Date(),
+                cash_received: cashReceived,
+                change: change
+            });
+            
+            // Update earnings
+            currentAmbassador.total_earnings += currentTransaction.commission;
+            currentAmbassador.today_earnings += currentTransaction.commission;
+            currentAmbassador.today_transactions += 1;
+            currentAmbassador.monthly_transactions += 1;
+            
+            // Update display
+            document.getElementById('totalEarnings').textContent = currentAmbassador.total_earnings;
+            loadStats();
+            
+            // Save to session
+            sessionStorage.setItem('currentAmbassador', JSON.stringify(currentAmbassador));
+            
+            // Show success screen
+            document.getElementById('paymentDetails').classList.remove('show');
+            document.getElementById('paymentSuccess').classList.add('show');
+        }
+
+        // Cancel payment
+        function cancelPayment() {
+            document.getElementById('paymentDetails').classList.remove('show');
+            document.getElementById('qrDataInput').value = '';
+            currentTransaction = null;
+        }
+
+        // New transaction
+        function newTransaction() {
+            document.getElementById('paymentSuccess').classList.remove('show');
+            document.getElementById('qrDataInput').value = '';
+            document.getElementById('cashReceived').value = '';
+            currentTransaction = null;
+        }
+
+        // Show earnings dashboard
+        function showEarnings() {
+            document.getElementById('paymentScanner').classList.remove('active');
+            document.getElementById('earningsDashboard').classList.add('active');
+            document.getElementById('dashboardEarnings').textContent = currentAmbassador.total_earnings;
+            loadTransactionHistory();
+        }
+
+        // Show payment scanner
+        function showPaymentScanner() {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('earningsDashboard').classList.remove('active');
+            document.getElementById('paymentScanner').classList.add('active');
+        }
+
+        // Load transaction history
+        function loadTransactionHistory() {
+            const transactionList = document.getElementById('transactionList');
+            
+            // Combine demo transactions with current session transactions
+            const allTransactions = [...transactions, ...demoTransactions];
+            
+            if (allTransactions.length === 0) {
+                transactionList.innerHTML = '<p>No transactions yet. Start scanning QR codes to earn commission!</p>';
+                return;
+            }
+            
+            const transactionHTML = allTransactions.map(txn => `
+                <div class="transaction-item">
+                    <div>
+                        <strong>${txn.customer || txn.customer_name}</strong><br>
+                        <small>${txn.product} • ${txn.timestamp ? txn.timestamp.toLocaleString() : 'Recent'}</small>
+                    </div>
+                    <div style="text-align: right;">
+                        <div>₹${txn.amount}</div>
+                        <div class="commission-badge">+₹${txn.commission}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            transactionList.innerHTML = transactionHTML;
+        }
+
+        // Refresh earnings
+        function refreshEarnings() {
+            const refreshBtn = document.querySelector('#earningsDashboard .btn.secondary');
+            const originalText = refreshBtn.textContent;
+            
+            refreshBtn.textContent = 'Refreshing...';
+            refreshBtn.disabled = true;
+            
+            setTimeout(() => {
+                loadTransactionHistory();
+                refreshBtn.textContent = originalText;
+                refreshBtn.disabled = false;
+            }, 1000);
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentAmbassador = null;
+                currentTransaction = null;
+                transactions = [];
+                sessionStorage.removeItem('currentAmbassador');
+                
+                // Reset forms
+                document.getElementById('phoneInput').value = '';
+                document.getElementById('qrDataInput').value = '';
+                document.getElementById('cashReceived').value = '';
+                
+                // Hide all sections except login
+                document.getElementById('paymentScanner').classList.remove('active');
+                document.getElementById('earningsDashboard').classList.remove('active');
+                document.getElementById('paymentDetails').classList.remove('show');
+                document.getElementById('paymentSuccess').classList.remove('show');
+                document.getElementById('loginForm').classList.add('active');
+            }
+        }
+
+        // Error handling for failed network requests
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            if (!navigator.onLine) {
+                alert('No internet connection. Some features may not work properly.');
+            }
+        });
+    </script>
+</body>
+</html>
