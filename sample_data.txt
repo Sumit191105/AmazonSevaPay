@@ -1,0 +1,151 @@
+# Sample Data Files for Amazon Seva Pay
+
+## 1. Ambassador Profile Data (`sample_ambassadors.json`)
+
+*Matches your `templates_ambassador.html` structure*
+
+```json
+[
+  {"ambassador_id": "AMB001", "name": "Rajesh Kumar", "business_name": "Kumar Tea Stall", "business_type": "Tea Stall", "village": "Banda", "district": "Banda", "state": "Uttar Pradesh", "phone": "9876543210", "total_earnings": 2450.50, "total_transactions": 87, "success_rate": 98.8, "rating": 4.8, "registration_date": "2025-01-15", "status": "active", "commission_rate": 2.5, "daily_limit": 50000},
+  {"ambassador_id": "AMB002", "name": "Sunita Devi", "business_name": "Sunita General Store", "business_type": "Kirana Shop", "village": "Fatehabad", "district": "Fatehabad", "state": "Haryana", "phone": "9123456789", "total_earnings": 3200.75, "total_transactions": 124, "success_rate": 99.2, "rating": 4.9, "registration_date": "2025-01-20", "status": "active", "commission_rate": 2.5, "daily_limit": 50000},
+  {"ambassador_id": "AMB003", "name": "Mohan Singh", "business_name": "Singh Medical Store", "business_type": "Medical Shop", "village": "Khargone", "district": "Khargone", "state": "Madhya Pradesh", "phone": "8765432109", "total_earnings": 1890.25, "total_transactions": 65, "success_rate": 96.9, "rating": 4.7, "registration_date": "2025-02-01", "status": "active", "commission_rate": 2.5, "daily_limit": 50000},
+  {"ambassador_id": "AMB004", "name": "Lakshmi Patel", "business_name": "Patel Provision Store", "business_type": "General Store", "village": "Anand", "district": "Anand", "state": "Gujarat", "phone": "7654321098", "total_earnings": 4100.00, "total_transactions": 156, "success_rate": 99.4, "rating": 4.9, "registration_date": "2025-01-10", "status": "active", "commission_rate": 2.5, "daily_limit": 50000},
+  {"ambassador_id": "AMB005", "name": "Ravi Sharma", "business_name": "Sharma Cycle Repair", "business_type": "Repair Shop", "village": "Sikar", "district": "Sikar", "state": "Rajasthan", "phone": "6543210987", "total_earnings": 980.50, "total_transactions": 34, "success_rate": 94.1, "rating": 4.5, "registration_date": "2025-02-10", "status": "inactive", "commission_rate": 2.5, "daily_limit": 50000}
+]
+```
+
+## 2. Customer Profile Data (`sample_customers.json`)
+
+*Matches your `templates_customer.html` structure*
+
+```json
+[
+  {"customer_id": "CUST001", "name": "Priya Sharma", "phone": "9988776655", "village": "Banda", "district": "Banda", "state": "Uttar Pradesh", "profession": "School Teacher", "monthly_income": 22000, "registration_date": "2025-01-25", "total_orders": 12, "total_spent": 4800.50, "preferred_ambassador": "AMB001", "payment_method": "seva_pay", "status": "active", "last_order_date": "2025-06-17"},
+  {"customer_id": "CUST002", "name": "Amit Yadav", "phone": "8877665544", "village": "Fatehabad", "district": "Fatehabad", "state": "Haryana", "profession": "Farmer", "monthly_income": 28000, "registration_date": "2025-02-01", "total_orders": 8, "total_spent": 3200.75, "preferred_ambassador": "AMB002", "payment_method": "seva_pay", "status": "active", "last_order_date": "2025-06-18"},
+  {"customer_id": "CUST003", "name": "Kavita Singh", "phone": "7766554433", "village": "Banda", "district": "Banda", "state": "Uttar Pradesh", "profession": "Small Business Owner", "monthly_income": 32000, "registration_date": "2025-01-30", "total_orders": 15, "total_spent": 6750.00, "preferred_ambassador": "AMB001", "payment_method": "seva_pay", "status": "active", "last_order_date": "2025-06-16"},
+  {"customer_id": "CUST004", "name": "Deepak Kumar", "phone": "6655443322", "village": "Khargone", "district": "Khargone", "state": "Madhya Pradesh", "profession": "Government Employee", "monthly_income": 35000, "registration_date": "2025-02-05", "total_orders": 6, "total_spent": 2890.25, "preferred_ambassador": "AMB003", "payment_method": "seva_pay", "status": "active", "last_order_date": "2025-06-15"},
+  {"customer_id": "CUST005", "name": "Meera Patel", "phone": "5544332211", "village": "Anand", "district": "Anand", "state": "Gujarat", "profession": "ASHA Worker", "monthly_income": 18000, "registration_date": "2025-02-12", "total_orders": 4, "total_spent": 1560.00, "preferred_ambassador": "AMB004", "payment_method": "seva_pay", "status": "active", "last_order_date": "2025-06-14"}
+]
+```
+
+## 3. Transaction Data (`sample_transactions.json`)
+
+*Aligns with your `app.py` and `sync_manager.py` logic*
+
+```json
+[
+  {"transaction_id": "TXN001", "customer_id": "CUST001", "ambassador_id": "AMB001", "order_id": "ORD001", "amount": 299.00, "commission": 7.48, "product_name": "Wireless Earbuds", "category": "Electronics", "transaction_time": "2025-06-18T14:30:00Z", "status": "completed", "payment_method": "cash", "offline_duration": 45, "sync_status": "synced", "sync_time": "2025-06-18T15:15:00Z", "qr_code": "QR001", "network_status": "offline"},
+  {"transaction_id": "TXN002", "customer_id": "CUST002", "ambassador_id": "AMB002", "order_id": "ORD002", "amount": 450.00, "commission": 11.25, "product_name": "Kitchen Utensils Set", "category": "Home & Kitchen", "transaction_time": "2025-06-18T18:15:00Z", "status": "pending", "payment_method": "cash", "offline_duration": 120, "sync_status": "queued", "sync_time": null, "qr_code": "QR002", "network_status": "offline"},
+  {"transaction_id": "TXN003", "customer_id": "CUST003", "ambassador_id": "AMB001", "order_id": "ORD003", "amount": 199.00, "commission": 4.98, "product_name": "Phone Case", "category": "Accessories", "transaction_time": "2025-06-17T20:45:00Z", "status": "completed", "payment_method": "cash", "offline_duration": 30, "sync_status": "synced", "sync_time": "2025-06-17T21:15:00Z", "qr_code": "QR003", "network_status": "offline"},
+  {"transaction_id": "TXN004", "customer_id": "CUST004", "ambassador_id": "AMB003", "order_id": "ORD004", "amount": 750.00, "commission": 18.75, "product_name": "Health Supplements", "category": "Health", "transaction_time": "2025-06-17T16:20:00Z", "status": "completed", "payment_method": "cash", "offline_duration": 90, "sync_status": "synced", "sync_time": "2025-06-17T17:50:00Z", "qr_code": "QR004", "network_status": "poor"},
+  {"transaction_id": "TXN005", "customer_id": "CUST001", "ambassador_id": "AMB004", "order_id": "ORD005", "amount": 320.00, "commission": 8.00, "product_name": "Home Decor Items", "category": "Home & Garden", "transaction_time": "2025-06-16T19:30:00Z", "status": "failed", "payment_method": "cash", "offline_duration": 180, "sync_status": "error", "sync_time": null, "qr_code": "QR005", "network_status": "offline"}
+]
+```
+
+## 4. Sync Manager Data (`sync_queue.json`)
+
+*Specifically for your `sync_manager.py` functionality*
+
+```json
+[
+  {"sync_id": "SYNC001", "transaction_id": "TXN002", "ambassador_id": "AMB002", "data_type": "transaction", "priority": "high", "retry_count": 0, "max_retries": 3, "created_at": "2025-06-18T18:15:00Z", "last_attempt": null, "status": "pending", "error_message": null, "data_size": 1024},
+  {"sync_id": "SYNC002", "transaction_id": "TXN005", "ambassador_id": "AMB004", "data_type": "transaction", "priority": "medium", "retry_count": 2, "max_retries": 3, "created_at": "2025-06-16T19:30:00Z", "last_attempt": "2025-06-18T10:30:00Z", "status": "error", "error_message": "Network timeout", "data_size": 1024},
+  {"sync_id": "SYNC003", "transaction_id": "TXN006", "ambassador_id": "AMB001", "data_type": "transaction", "priority": "low", "retry_count": 0, "max_retries": 3, "created_at": "2025-06-18T17:45:00Z", "last_attempt": null, "status": "pending", "error_message": null, "data_size": 1024}
+]
+```
+
+## 5. QR Code Generation Data (`qr_codes.csv`)
+
+*For your QR code generation in `app.py`*
+
+```csv
+qr_id,customer_id,order_id,amount,product_name,generated_time,expiry_time,status,ambassador_scanned,scan_time
+QR001,CUST001,ORD001,299.00,Wireless Earbuds,2025-06-18T14:00:00Z,2025-06-18T15:00:00Z,used,AMB001,2025-06-18T14:30:00Z
+QR002,CUST002,ORD002,450.00,Kitchen Utensils Set,2025-06-18T18:00:00Z,2025-06-18T19:00:00Z,active,,
+QR003,CUST003,ORD003,199.00,Phone Case,2025-06-17T20:30:00Z,2025-06-17T21:30:00Z,used,AMB001,2025-06-17T20:45:00Z
+QR004,CUST004,ORD004,750.00,Health Supplements,2025-06-17T16:00:00Z,2025-06-17T17:00:00Z,used,AMB003,2025-06-17T16:20:00Z
+QR005,CUST001,ORD005,320.00,Home Decor Items,2025-06-16T19:00:00Z,2025-06-16T20:00:00Z,expired,,
+QR006,CUST005,ORD006,180.00,Beauty Products,2025-06-18T16:00:00Z,2025-06-18T17:00:00Z,active,,
+QR007,CUST002,ORD007,650.00,Electronics,2025-06-18T14:30:00Z,2025-06-18T15:30:00Z,used,AMB002,2025-06-18T14:45:00Z
+```
+
+## 6. Network Status Data (`network_analytics.json`)
+
+*For connectivity tracking*
+
+```json
+[
+  {"location_id": "LOC001", "village": "Banda", "district": "Banda", "state": "UP", "timestamp": "2025-06-18T18:00:00Z", "network_strength": 0, "connectivity_status": "offline", "last_successful_sync": "2025-06-18T15:30:00Z", "pending_syncs": 3, "active_ambassadors": 2, "total_transactions_today": 8},
+  {"location_id": "LOC002", "village": "Fatehabad", "district": "Fatehabad", "state": "Haryana", "timestamp": "2025-06-18T18:00:00Z", "network_strength": 2, "connectivity_status": "poor", "last_successful_sync": "2025-06-18T17:45:00Z", "pending_syncs": 1, "active_ambassadors": 1, "total_transactions_today": 5},
+  {"location_id": "LOC003", "village": "Khargone", "district": "Khargone", "state": "MP", "timestamp": "2025-06-18T18:00:00Z", "network_strength": 4, "connectivity_status": "good", "last_successful_sync": "2025-06-18T18:00:00Z", "pending_syncs": 0, "active_ambassadors": 1, "total_transactions_today": 3},
+  {"location_id": "LOC004", "village": "Anand", "district": "Anand", "state": "Gujarat", "timestamp": "2025-06-18T18:00:00Z", "network_strength": 1, "connectivity_status": "very_poor", "last_successful_sync": "2025-06-18T14:20:00Z", "pending_syncs": 5, "active_ambassadors": 1, "total_transactions_today": 7},
+  {"location_id": "LOC005", "village": "Sikar", "district": "Sikar", "state": "Rajasthan", "timestamp": "2025-06-18T18:00:00Z", "network_strength": 3, "connectivity_status": "moderate", "last_successful_sync": "2025-06-18T17:15:00Z", "pending_syncs": 2, "active_ambassadors": 0, "total_transactions_today": 0}
+]
+```
+
+## 7. Application Configuration (`app_config.json`)
+
+*Based on `app.py` requirements*
+
+```json
+{
+  "app_name": "Amazon Seva Pay",
+  "version": "1.0.0",
+  "offline_storage_limit": 72,
+  "sync_retry_limit": 3,
+  "qr_expiry_minutes": 60,
+  "commission_rate": 2.5,
+  "daily_transaction_limit": 50000,
+  "supported_states": ["Uttar Pradesh", "Haryana", "Madhya Pradesh", "Gujarat", "Rajasthan"],
+  "network_check_interval": 300,
+  "auto_sync_enabled": true,
+  "encryption_enabled": true,
+  "ambassador_verification_required": true,
+  "customer_registration_required": true,
+  "transaction_categories": ["Electronics", "Home & Kitchen", "Accessories", "Health", "Home & Garden", "Beauty", "Fashion", "Books", "Sports"]
+}
+```
+
+## 8. Error Logs (`error_logs.txt`)
+
+*For debugging and monitoring*
+
+```
+[2025-06-18 18:30:15] ERROR: Sync failed for transaction TXN005 - Network timeout after 30 seconds
+[2025-06-18 17:45:22] WARNING: Ambassador AMB005 offline for 48 hours - Status changed to inactive
+[2025-06-18 16:20:33] ERROR: QR code QR005 expired before scanning - Customer CUST001 notified
+[2025-06-18 15:10:45] INFO: Successful sync of 5 pending transactions from LOC001
+[2025-06-18 14:30:12] WARNING: High network latency detected in LOC004 - Switching to offline mode
+[2025-06-18 13:45:28] ERROR: Invalid QR code format detected - Transaction rejected
+[2025-06-18 12:15:34] INFO: New ambassador AMB006 registered successfully
+[2025-06-18 11:30:56] WARNING: Daily transaction limit reached for AMB001 - Temporary suspension
+[2025-06-18 10:45:12] ERROR: Database connection failed - Retrying in 60 seconds
+[2025-06-18 09:20:18] INFO: System startup completed - All modules initialized
+```
+
+## Folder Structure Recommendation
+
+```
+/your-repo
+├── app.py
+├── apptrial.py
+├── sync_manager.py
+├── finalsample.html
+├── templates_ambassador.html
+├── templates_customer.html
+├── templates_index.html
+├── style.css
+├── script.js
+├── Requirements.txt
+├── README.md
+└── sample_data
+    ├── README.md
+    ├── sample_ambassadors.json
+    ├── sample_customers.json
+    ├── sample_transactions.json
+    ├── sync_queue.json
+    ├── qr_codes.csv
+    ├── network_analytics.json
+    ├── app_config.json
+    └── error_logs.txt
+```
