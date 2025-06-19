@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer App - Amazon Seva Pay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #232F3E;
+            margin-bottom: 10px;
+        }
+
+        .network-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .online { background: #4CAF50; color: white; }
+        .offline { background: #f44336; color: white; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .login-form, .qr-generator, .transaction-history {
+            display: none;
+        }
+
+        .login-form.active, .qr-generator.active, .transaction-history.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #232F3E;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #ef5350);
+        }
+
+        .qr-display {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: white;
+            border: 2px solid #ddd;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            word-wrap: break-word;
+            padding: 10px;
+        }
+
+        .transaction-details {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .transaction-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-completed { background: #4CAF50; color: white; }
+        .status-pending { background: #FF9800; color: white; }
+        .status-failed { background: #f44336; color: white; }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #232F3E;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .welcome-message {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .amount-btn {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .amount-btn:hover, .amount-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .qr-code {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>👤 Customer App</h1>
+            <p>Generate QR codes for offline payments</p>
+            <div class="network-status" id="networkStatus">🌐 Online</div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="card login-form active" id="loginForm">
+            <h2>Customer Login</h2>
+            <p>Enter your phone number to access your account</p>
+            
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phoneInput" placeholder="Enter 10-digit phone number" maxlength="10">
+            </div>
+            
+            <button class="btn" onclick="customerLogin()">Login</button>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                <strong>Demo Login:</strong><br>
+                📞 9876543210 (Priya Sharma)<br>
+                📞 9876543211 (Rahul Kumar)<br>
+                📞 9876543212 (Sunita Devi)
+            </div>
+        </div>
+
+        <!-- QR Generator -->
+        <div class="card qr-generator" id="qrGenerator">
+            <div class="welcome-message" id="welcomeMessage">
+                Welcome back! Generate QR codes for your Amazon orders
+            </div>
+
+            <h2>Generate Payment QR Code</h2>
+            
+            <div class="form-group">
+                <label>Order Amount (₹)</label>
+                <input type="number" id="amountInput" placeholder="Enter amount" min="1" step="0.01">
+                
+                <div class="quick-amounts">
+                    <div class="amount-btn" onclick="selectAmount(100)">₹100</div>
+                    <div class="amount-btn" onclick="selectAmount(250)">₹250</div>
+                    <div class="amount-btn" onclick="selectAmount(500)">₹500</div>
+                    <div class="amount-btn" onclick="selectAmount(1000)">₹1000</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Product Details</label>
+                <textarea id="productInput" placeholder="Enter product details (optional)" rows="3"></textarea>
+            </div>
+            
+            <button class="btn" onclick="generateQR()">Generate QR Code</button>
+            <button class="btn secondary" onclick="showTransactions()">View Transactions</button>
+            <button class="btn danger" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- QR Display -->
+        <div class="card qr-display" id="qrDisplay" style="display: none;">
+            <h3>Your Payment QR Code</h3>
+            <div class="qr-code" id="qrCode">QR Code will appear here</div>
+            
+            <div class="transaction-details">
+                <p><strong>Transaction ID:</strong> <span id="transactionId"></span></p>
+                <p><strong>Amount:</strong> ₹<span id="displayAmount"></span></p>
+                <p><strong>Product:</strong> <span id="displayProduct"></span></p>
+                <p><strong>Status:</strong> <span class="transaction-status status-pending">Waiting for Payment</span></p>
+            </div>
+            
+            <p style="color: #666; margin-top: 15px;">
+                📱 Show this QR code to any Payment Ambassador<br>
+                ⏱️ Valid for 2 hours | Works offline
+            </p>
+            
+            <button class="btn" onclick="generateNewQR()">Generate New QR</button>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card transaction-history" id="transactionHistory">
+            <h2>Transaction History</h2>
+            <div id="transactionList">
+                <p>Loading transactions...</p>
+            </div>
+            
+            <button class="btn" onclick="showQRGenerator()">Back to QR Generator</button>
+            <button class="btn secondary" onclick="refreshTransactions()">Refresh</button>
+        </div>
+    </div>
+
+    <script>
+        let currentCustomer = null;
+        let currentTransaction = null;
+
+        // Network status
+        function updateNetworkStatus() {
+            const status = document.getElementById('networkStatus');
+            const isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                status.innerHTML = '🌐 Online';
+                status.className = 'network-status online';
+            } else {
+                status.innerHTML = '📴 Offline Mode';
+                status.className = 'network-status offline';
+            }
+        }
+
+        // Customer login
+        async function customerLogin() {
+            const phone = document.getElementById('phoneInput').value;
+            
+            if (phone.length !== 10) {
+                alert('Please enter a valid 10-digit phone number');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/customer/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentCustomer = data.customer;
+                    document.getElementById('welcomeMessage').innerHTML = 
+                        `Welcome back, ${data.customer.name}! 👋`;
+                    showQRGenerator();
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            } catch (error) {
+                alert('Login failed. Please try again.');
+            }
+        }
+
+        // Generate QR code
+        async function generateQR() {
+            const amount = document.getElementById('amountInput').value;
+            const product = document.getElementById('productInput').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/generate-qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        product_details: product || 'Amazon Order'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTransaction = data;
+                    displayQR(data);
+                } else {
+                    alert(data.message || 'QR generation failed');
+                }
+            } catch (error) {
+                // Offline mode - generate demo QR
+                const demoData = {
+                    transaction_id: 'SP' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+                    amount: parseFloat(amount),
+                    product_details: product || 'Amazon Order',
+                    qr_data: JSON.stringify({
+                        transaction_id: 'DEMO_' + Date.now(),
+                        amount: parseFloat(amount),
+                        product: product || 'Amazon Order',
+                        offline: true
+                    })
+                };
+                displayQR(demoData);
+            }
+        }
+
+        // Display QR code
+        function displayQR(data) {
+            document.getElementById('transactionId').textContent = data.transaction_id;
+            document.getElementById('displayAmount').textContent = data.amount;
+            document.getElementById('displayProduct').textContent = data.product_details;
+            document.getElementById('qrCode').innerHTML = 
+                `<div style="font-family: monospace; font-size: 10px; word-break: break-all;">${data.qr_data}</div>`;
+            
+            document.getElementById('qrDisplay').style.display = 'block';
+            document.getElementById('qrGenerator').classList.remove('active');
+        }
+
+        // Show transactions
+        async function showTransactions() {
+            document.getElementById('qrGenerator').classList.remove('active');
+            document.getElementById('transactionHistory').classList.add('active');
+            await loadTransactions();
+        }
+
+        // Load transaction history
+        async function loadTransactions() {
+            try {
+                const response = await fetch('/api/transactions');
+                const data = await response.json();
+                
+                if (data.success && data.transactions.length > 0) {
+                    let html = '';
+                    data.transactions.forEach(tx => {
+                        const statusClass = `status-${tx[2]}`;
+                        const date = new Date(tx[4]).toLocaleDateString();
+                        html += `
+                            <div class="transaction-item">
+                                <div>
+                                    <strong>${tx[0]}</strong><br>
+                                    <small>${tx[3]} | ${date}</small>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div>₹${tx[1]}</div>
+                                    <div class="transaction-status ${statusClass}">${tx[2]}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('transactionList').innerHTML = html;
+                } else {
+                    document.getElementById('transactionList').innerHTML = 
+                        '<p>No transactions found. Generate your first QR code!</p>';
+                }
+            } catch (error) {
+                document.getElementById('transactionList').innerHTML = 
+                    '<p>Unable to load transactions. Please try again.</p>';
+            }
+        }
+
+        // Utility functions
+        function selectAmount(amount) {
+            document.getElementById('amountInput').value = amount;
+            document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function generateNewQR() {
+            document.getElementById('qrDisplay').style.display = 'none';
+            document.getElementById('qrGenerator').classList.add('active');
+            document.getElementById('amountInput').value = '';
+            document.getElementById('productInput').value = '';
+        }
+
+        function showQRGenerator() {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('transactionHistory').classList.remove('active');
+            document.getElementById('qrGenerator').classList.add('active');
+        }
+
+        function refreshTransactions() {
+            loadTransactions();
+        }
+
+        async function logout() {
+            try {
+                await fetch('/logout');
+            } catch (error) {
+                console.log('Logout request failed');
+            }
+            
+            currentCustomer = null;
+            document.getElementById('qrGenerator').classList.remove('active');
+            document.getElementById('transactionHistory').classList.remove('active');
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('phoneInput').value = '';
+        }
+
+        // Initialize
+        window.addEventListener('load', updateNetworkStatus);
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+	<script src="{{ url_for('static', filename='script.js') }}"></script>	
+
+    </script>
+</body>
+</html>
