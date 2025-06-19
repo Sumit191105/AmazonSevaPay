@@ -1,275 +1,439 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-<script>
-  const secretKey = "seva123";
-  let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
-  let ambEarnings = 0;
-  let ambTodayEarnings = 0;
-  let ambTxCount = 0;
-  let ambTxList = [];
-  document.getElementById('download-today-report').onclick = function() {
-      let allTx = [];
-      try {
-        allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
-      } catch { allTx = []; }
+// Amazon Seva Pay - Complete JavaScript Functionality
+
+// Global variables
+let offlineTransactions = [];
+let isOnline = navigator.onLine;
+let currentUser = null;
+let ambassadorEarnings = 0;
+
+// Initialize app when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+    setupEventListeners();
+    loadOfflineData();
+    updateConnectionStatus();
+});
+
+// Initialize application
+function initializeApp() {
+    console.log('Amazon Seva Pay - Initializing...');
     
-      // Get today's date string
-      const todayStr = new Date().toLocaleDateString();
+    // Load saved data from localStorage
+    loadOfflineData();
     
-      // Group earnings by ambassador for today
-      const earningsToday = {};
-      allTx.forEach(tx => {
-        const ambassador = tx.ambassador || "Ambassador 1";
-        const txDate = new Date(tx.time).toLocaleDateString();
-        if (txDate === todayStr) {
-          if (!earningsToday[ambassador]) earningsToday[ambassador] = 0;
-          earningsToday[ambassador] += parseFloat(tx.commission || 0);
+    // Set up connection status monitoring
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Initialize QR code library if available
+    if (typeof QRCode !== 'undefined') {
+        console.log('QR Code library loaded');
+    }
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    // Customer page events
+    const generateQRBtn = document.getElementById('generateQR');
+    if (generateQRBtn) {
+        generateQRBtn.addEventListener('click', generateQRCode);
+    }
+    
+    const orderForm = document.getElementById('orderForm');
+    if (orderForm) {
+        orderForm.addEventListener('submit', handleOrderSubmission);
+    }
+    
+    // Ambassador page events
+    const scanQRBtn = document.getElementById('scanQR');
+    if (scanQRBtn) {
+        scanQRBtn.addEventListener('click', scanQRCode);
+    }
+    
+    const processPaymentBtn = document.getElementById('processPayment');
+    if (processPaymentBtn) {
+        processPaymentBtn.addEventListener('click', processPayment);
+    }
+    
+    const syncBtn = document.getElementById('syncTransactions');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', syncOfflineTransactions);
+    }
+}
+
+// Connection status handlers
+function handleOnline() {
+    isOnline = true;
+    updateConnectionStatus();
+    showAlert('Connection restored! Syncing transactions...', 'success');
+    syncOfflineTransactions();
+}
+
+function handleOffline() {
+    isOnline = false;
+    updateConnectionStatus();
+    showAlert('Offline mode activated. Transactions will be saved locally.', 'info');
+}
+
+function updateConnectionStatus() {
+    const statusElements = document.querySelectorAll('.connection-status');
+    statusElements.forEach(element => {
+        if (isOnline) {
+            element.textContent = '🟢 Online';
+            element.className = 'status status-online';
+        } else {
+            element.textContent = '🔴 Offline';
+            element.className = 'status status-offline';
         }
-      });
+    });
+}
+
+// Customer Functions
+function generateQRCode() {
+    const productName = document.getElementById('productName')?.value;
+    const amount = document.getElementById('amount')?.value;
+    const customerName = document.getElementById('customerName')?.value;
+    const customerPhone = document.getElementById('customerPhone')?.value;
     
-      // Build CSV
-      let csv = "Ambassador,Today's Earnings (₹)\n";
-      Object.keys(earningsToday).forEach(amb => {
-        csv += `${amb},${earningsToday[amb].toFixed(2)}\n`;
-      });
-      if (Object.keys(earningsToday).length === 0) {
-        csv += "No earnings today,0\n";
-      }
+    if (!productName || !amount || !customerName || !customerPhone) {
+        showAlert('Please fill all fields', 'error');
+        return;
+    }
     
-      // Download as CSV
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `amazon-seva-pay-today-earnings-${todayStr.replace(/\//g,'-')}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+    // Create transaction data
+    const transactionData = {
+        id: generateTransactionId(),
+        productName: productName,
+        amount: parseFloat(amount),
+        customerName: customerName,
+        customerPhone: customerPhone,
+        timestamp: new Date().toISOString(),
+        status: 'pending'
     };
     
-  function showTab(tabId) {
-    document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-    document.getElementById(tabId).classList.add('active');
-    if (tabId === 'admin') renderAdminEarningsTable();
-    if (tabId === 'ambassador') updateAmbDashboard();
-  }
-  function chooseRole(role) {
-    document.getElementById('roleModal').style.display = 'none';
-    document.getElementById('popupModal').style.display = 'block';
-    showTab(role);
-  }
-  function generateQR() {
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const product = document.getElementById("product").value.trim();
-    const amount = document.getElementById("amount").value.trim();
-    if (!name || !phone || !product || !amount) {
-      alert("Please fill all fields");
-      return;
+    // Generate QR code data
+    const qrData = JSON.stringify(transactionData);
+    
+    // Display QR code
+    displayQRCode(qrData);
+    
+    // Store transaction locally
+    storeTransactionLocally(transactionData);
+    
+    // Show success message
+    showAlert('QR Code generated successfully! Show this to your Payment Ambassador.', 'success');
+}
+
+function displayQRCode(data) {
+    const qrDisplay = document.getElementById('qrDisplay');
+    const qrCodeElement = document.getElementById('qrcode');
+    
+    if (qrDisplay && qrCodeElement) {
+        // Clear previous QR code
+        qrCodeElement.innerHTML = '';
+        
+        // Generate new QR code
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(qrCodeElement, {
+                text: data,
+                width: 200,
+                height: 200,
+                colorDark: "#232f3e",
+                colorLight: "#ffffff"
+            });
+        } else {
+            // Fallback: display data as text
+            qrCodeElement.innerHTML = `
+                <div style="padding: 20px; border: 2px solid #232f3e; background: white; font-family: monospace; word-break: break-all;">
+                    <strong>QR Data:</strong><br>
+                    ${data}
+                </div>
+            `;
+        }
+        
+        qrDisplay.style.display = 'block';
+        qrDisplay.classList.add('fade-in');
     }
-    const data = `${name}|${phone}|${product}|${amount}`;
-    const signature = btoa(data + secretKey);
-    const qrObj = { name, phone, product, amount, signature };
-    new QRious({
-      element: document.getElementById("qr-canvas"),
-      value: JSON.stringify(qrObj),
-      size: 200
-    });
-    document.getElementById("qr-json").innerText = JSON.stringify(qrObj);
-  }
-  function processQRData() {
-    const qrData = document.getElementById("qrdata").value.trim();
-    const ambassador = document.getElementById("ambassadorName").value.trim() || "Ambassador 1";
-    if (!qrData) {
-      alert("Please paste QR data");
-      return;
-    }
-    try {
-      const tx = JSON.parse(qrData);
-      const verifySig = btoa(`${tx.name}|${tx.phone}|${tx.product}|${tx.amount}` + secretKey);
-      if (tx.signature === verifySig) {
-        // Save with ambassador and commission info
-        const commission = parseFloat(tx.amount) * 0.02;
-        const txObj = {
-          ambassador,
-          name: tx.name,
-          phone: tx.phone,
-          product: tx.product,
-          amount: tx.amount,
-          commission,
-          time: new Date().toLocaleString()
-        };
-        transactions.push(txObj);
-        localStorage.setItem("transactions", JSON.stringify(transactions));
-        alert("Transaction Stored Offline");
-        document.getElementById("qrdata").value = "";
-        displayTransactions();
-        updateAmbDashboard();
-      } else {
-        alert("Invalid Signature - Fraud suspected");
-      }
-    } catch {
-      alert("Invalid QR data");
-    }
-  }
-  function syncTransactions() {
-    if (!navigator.onLine) {
-      alert("No Internet Connection");
-      return;
-    }
-    const txDiv = document.getElementById("transactions");
-    txDiv.innerHTML = "";
-    transactions.forEach(tx => {
-      txDiv.innerHTML += `<div class='transaction-item'>
-        Order from ${tx.name} for ₹${tx.amount} - Synced ✅<br/>
-        Commission Earned: ₹${parseFloat(tx.commission).toFixed(2)}
-      </div>`;
-    });
-    localStorage.removeItem("transactions");
-    transactions = [];
-    updateAmbDashboard();
-  }
-  function displayTransactions() {
-    const txDiv = document.getElementById("transactions");
-    txDiv.innerHTML = "";
-    transactions.forEach(tx => {
-      txDiv.innerHTML += `<div class='transaction-item'>
-        Order from ${tx.name} for ₹${tx.amount} - Pending
-      </div>`;
-    });
-  }
-  // Ambassador Dashboard Logic
-  function updateAmbDashboard() {
-    const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
-    // Filter transactions for this ambassador
-    const now = new Date();
-    ambTxList = transactions.filter(tx => tx.ambassador === ambassador);
-    ambEarnings = ambTxList.reduce((sum, tx) => sum + (parseFloat(tx.commission) || 0), 0);
-    ambTodayEarnings = ambTxList.filter(tx => {
-      const txDate = new Date(tx.time);
-      return txDate.toDateString() === now.toDateString();
-    }).reduce((sum, tx) => sum + (parseFloat(tx.commission) || 0), 0);
-    ambTxCount = ambTxList.length;
-    document.getElementById('amb-total-earnings').textContent = ambEarnings.toFixed(2);
-    document.getElementById('amb-today-earnings').textContent = ambTodayEarnings.toFixed(2);
-    document.getElementById('amb-total-tx').textContent = ambTxCount;
-    renderAmbTxList();
-  }
-  function renderAmbTxList() {
-    const txDiv = document.getElementById('amb-tx-list');
-    if (!ambTxList.length) {
-      txDiv.innerHTML = "<div style='color:#888; text-align:center;'>No transactions yet</div>";
-      return;
-    }
-    txDiv.innerHTML = ambTxList.slice(0,10).map(tx => `
-      <div class="transaction-item" style="border-left:4px solid #f0c14b;">
-        <div><b>${tx.name}</b> • ₹${tx.amount} <span style="color:#888; font-size:0.95em;">(${tx.product})</span></div>
-        <div style="font-size:0.95em; color:#666;">${tx.time}</div>
-        <div style="font-size:0.95em; color:#28a745;">Commission: ₹${parseFloat(tx.commission).toFixed(2)}</div>
-      </div>
-    `).join('');
-  }
-  // Ambassador Mode: Simulate QR Scan
-  function simulateQRScan() {
-    const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
-    const customer = "Customer " + (Math.floor(Math.random()*900)+100);
-    const product = "P" + (Math.floor(Math.random()*9000)+1000);
-    const amount = Math.floor(Math.random()*400)+100;
-    const commission = amount * 0.02;
-    const tx = {
-      ambassador,
-      name: customer,
-      product,
-      amount,
-      commission,
-      time: new Date().toLocaleString()
+}
+
+function handleOrderSubmission(event) {
+    event.preventDefault();
+    generateQRCode();
+}
+
+// Ambassador Functions
+function scanQRCode() {
+    // Simulate QR code scanning (in real app, this would use camera)
+    const mockQRData = {
+        id: generateTransactionId(),
+        productName: "Sample Product",
+        amount: 299,
+        customerName: "John Doe",
+        customerPhone: "9876543210",
+        timestamp: new Date().toISOString(),
+        status: 'pending'
     };
-    transactions.push(tx);
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-    updateAmbDashboard();
-    ambNotify(`Payment processed: ₹${amount} (Commission: ₹${commission.toFixed(2)})`);
-  }
-  // Manual Entry Toggle
-  function toggleManualEntry() {
-    const form = document.getElementById('manualEntryForm');
-    form.style.display = form.style.display === "none" ? "block" : "none";
-  }
-  // Manual Payment
-  function processManualPayment() {
-    const ambassador = document.getElementById("ambassadorName") ? (document.getElementById("ambassadorName").value.trim() || "Ambassador 1") : "Ambassador 1";
-    const customer = document.getElementById('manualCustomer').value.trim();
-    const product = document.getElementById('manualProduct').value.trim();
-    const amount = parseFloat(document.getElementById('manualAmount').value);
-    if (!customer || !amount || amount <= 0 || !product) {
-      ambNotify("Please enter valid customer, product, and amount", true);
-      return;
+    
+    displayTransactionDetails(mockQRData);
+    
+    // In real implementation, you would integrate with camera API
+    showAlert('QR Code scanned successfully!', 'success');
+}
+
+function displayTransactionDetails(transactionData) {
+    const transactionDisplay = document.getElementById('transactionDetails');
+    
+    if (transactionDisplay) {
+        transactionDisplay.innerHTML = `
+            <div class="transaction fade-in">
+                <h3>Transaction Details</h3>
+                <div class="transaction-details">
+                    <div class="transaction-item">
+                        <span class="transaction-label">Transaction ID:</span>
+                        <span class="transaction-value">${transactionData.id}</span>
+                    </div>
+                    <div class="transaction-item">
+                        <span class="transaction-label">Product:</span>
+                        <span class="transaction-value">${transactionData.productName}</span>
+                    </div>
+                    <div class="transaction-item">
+                        <span class="transaction-label">Amount:</span>
+                        <span class="transaction-value">₹${transactionData.amount}</span>
+                    </div>
+                    <div class="transaction-item">
+                        <span class="transaction-label">Customer:</span>
+                        <span class="transaction-value">${transactionData.customerName}</span>
+                    </div>
+                    <div class="transaction-item">
+                        <span class="transaction-label">Phone:</span>
+                        <span class="transaction-value">${transactionData.customerPhone}</span>
+                    </div>
+                    <div class="transaction-item">
+                        <span class="transaction-label">Time:</span>
+                        <span class="transaction-value">${new Date(transactionData.timestamp).toLocaleString()}</span>
+                    </div>
+                </div>
+                <button id="confirmPayment" class="btn btn-secondary" onclick="processPayment('${transactionData.id}')">
+                    Confirm Cash Payment Received
+                </button>
+            </div>
+        `;
+        
+        // Store transaction for processing
+        window.currentTransaction = transactionData;
     }
-    const commission = amount * 0.02;
-    const tx = {
-      ambassador,
-      name: customer,
-      product,
-      amount,
-      commission,
-      time: new Date().toLocaleString()
-    };
-    transactions.push(tx);
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-    updateAmbDashboard();
-    ambNotify(`Payment processed: ₹${amount} (Commission: ₹${commission.toFixed(2)})`);
-    document.getElementById('manualCustomer').value = "";
-    document.getElementById('manualProduct').value = "";
-    document.getElementById('manualAmount').value = "";
-    document.getElementById('manualEntryForm').style.display = "none";
-  }
-  // Amazon-Style Notification
-  function ambNotify(msg, error) {
-    const n = document.getElementById('amb-notify');
-    n.textContent = msg;
-    n.style.background = error ? "#b12704" : "#232f3e";
-    n.style.display = "block";
-    setTimeout(()=>{ n.style.display="none"; }, 2500);
-  }
-  // Admin Dashboard: Earnings by Ambassador and Product ID
-  function renderAdminEarningsTable() {
-    let allTx = [];
-    try {
-      allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
-    } catch { allTx = []; }
-    // Group by ambassador and product
-    const earningsMap = {};
-    allTx.forEach(tx => {
-      const ambassador = tx.ambassador || "Ambassador 1";
-      const product = tx.product || tx.productId || "Unknown";
-      const commission = parseFloat(tx.commission || 3);
-      if (!earningsMap[ambassador]) earningsMap[ambassador] = {};
-      if (!earningsMap[ambassador][product]) earningsMap[ambassador][product] = 0;
-      earningsMap[ambassador][product] += commission;
-    });
-    // Build table HTML
-    let html = `<table class="admin-table">
-      <tr>
-        <th>Ambassador</th>
-        <th>Product ID</th>
-        <th>Total Earnings (₹)</th>
-      </tr>`;
-    let found = false;
-    Object.keys(earningsMap).forEach(amb => {
-      Object.keys(earningsMap[amb]).forEach(prod => {
-        found = true;
-        html += `<tr>
-          <td>${amb}</td>
-          <td>${prod}</td>
-          <td>₹${earningsMap[amb][prod].toFixed(2)}</td>
-        </tr>`;
-      });
-    });
-    if (!found) {
-      html += `<tr><td colspan="3" style="text-align:center; color:#888;">No earnings data available</td></tr>`;
+}
+
+function processPayment(transactionId) {
+    if (!window.currentTransaction) {
+        showAlert('No transaction to process', 'error');
+        return;
     }
-    html += `</table>`;
-    document.getElementById('admin-earnings-table').innerHTML = html;
-  }
-  // Display pending transactions on load
-  window.onload = displayTransactions;
-</script>
+    
+    // Calculate commission (2% of transaction amount)
+    const commission = window.currentTransaction.amount * 0.02;
+    
+    // Update transaction status
+    window.currentTransaction.status = 'completed';
+    window.currentTransaction.processedAt = new Date().toISOString();
+    window.currentTransaction.commission = commission;
+    
+    // Add to offline transactions
+    offlineTransactions.push(window.currentTransaction);
+    
+    // Update ambassador earnings
+    ambassadorEarnings += commission;
+    updateEarningsDisplay();
+    
+    // Save to local storage
+    saveOfflineData();
+    
+    // Show success message
+    showAlert(`Payment processed successfully! Commission earned: ₹${commission.toFixed(2)}`, 'success');
+    
+    // Clear transaction display
+    const transactionDisplay = document.getElementById('transactionDetails');
+    if (transactionDisplay) {
+        transactionDisplay.innerHTML = '<p>Ready to scan next QR code...</p>';
+    }
+    
+    // Sync if online
+    if (isOnline) {
+        setTimeout(syncOfflineTransactions, 1000);
+    }
+    
+    // Clear current transaction
+    window.currentTransaction = null;
+}
+
+function updateEarningsDisplay() {
+    const earningsElement = document.getElementById('totalEarnings');
+    if (earningsElement) {
+        earningsElement.textContent = `₹${ambassadorEarnings.toFixed(2)}`;
+    }
+    
+    const transactionCountElement = document.getElementById('transactionCount');
+    if (transactionCountElement) {
+        transactionCountElement.textContent = offlineTransactions.length;
+    }
+}
+
+// Offline Data Management
+function storeTransactionLocally(transaction) {
+    let localTransactions = JSON.parse(localStorage.getItem('sevaPayTransactions') || '[]');
+    localTransactions.push(transaction);
+    localStorage.setItem('sevaPayTransactions', JSON.stringify(localTransactions));
+}
+
+function loadOfflineData() {
+    // Load transactions
+    const savedTransactions = localStorage.getItem('sevaPayTransactions');
+    if (savedTransactions) {
+        offlineTransactions = JSON.parse(savedTransactions);
+    }
+    
+    // Load earnings
+    const savedEarnings = localStorage.getItem('sevaPayEarnings');
+    if (savedEarnings) {
+        ambassadorEarnings = parseFloat(savedEarnings);
+        updateEarningsDisplay();
+    }
+}
+
+function saveOfflineData() {
+    localStorage.setItem('sevaPayTransactions', JSON.stringify(offlineTransactions));
+    localStorage.setItem('sevaPayEarnings', ambassadorEarnings.toString());
+}
+
+function syncOfflineTransactions() {
+    if (!isOnline) {
+        showAlert('Cannot sync - device is offline', 'error');
+        return;
+    }
+    
+    if (offlineTransactions.length === 0) {
+        showAlert('No transactions to sync', 'info');
+        return;
+    }
+    
+    // Show loading spinner
+    showLoadingSpinner();
+    
+    // Simulate API call to sync transactions
+    setTimeout(() => {
+        // In real implementation, this would be an actual API call
+        console.log('Syncing transactions:', offlineTransactions);
+        
+        // Mark transactions as synced
+        offlineTransactions.forEach(transaction => {
+            transaction.synced = true;
+        });
+        
+        // Save updated data
+        saveOfflineData();
+        
+        // Hide loading spinner
+        hideLoadingSpinner();
+        
+        // Show success message
+        showAlert(`Successfully synced ${offlineTransactions.length} transactions!`, 'success');
+        
+    }, 2000); // 2 second delay to simulate network request
+}
+
+// Utility Functions
+function generateTransactionId() {
+    return 'SP' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+}
+
+function showAlert(message, type = 'info') {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Create new alert
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} fade-in`;
+    alert.textContent = message;
+    
+    // Insert at top of main content
+    const mainContent = document.querySelector('.main-content') || document.body;
+    mainContent.insertBefore(alert, mainContent.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function showLoadingSpinner() {
+    const spinner = document.createElement('div');
+    spinner.id = 'loadingSpinner';
+    spinner.className = 'spinner';
+    
+    const mainContent = document.querySelector('.main-content') || document.body;
+    mainContent.appendChild(spinner);
+}
+
+function hideLoadingSpinner() {
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) {
+        spinner.remove();
+    }
+}
+
+// Demo Functions (for presentation)
+function runDemo() {
+    showAlert('Starting Amazon Seva Pay Demo...', 'info');
+    
+    setTimeout(() => {
+        if (window.location.pathname.includes('customer')) {
+            demoCustomerFlow();
+        } else if (window.location.pathname.includes('ambassador')) {
+            demoAmbassadorFlow();
+        }
+    }, 1000);
+}
+
+function demoCustomerFlow() {
+    // Auto-fill form
+    const productName = document.getElementById('productName');
+    const amount = document.getElementById('amount');
+    const customerName = document.getElementById('customerName');
+    const customerPhone = document.getElementById('customerPhone');
+    
+    if (productName) productName.value = 'Amazon Echo Dot';
+    if (amount) amount.value = '2999';
+    if (customerName) customerName.value = 'Priya Sharma';
+    if (customerPhone) customerPhone.value = '9876543210';
+    
+    setTimeout(() => {
+        generateQRCode();
+    }, 1000);
+}
+
+function demoAmbassadorFlow() {
+    setTimeout(() => {
+        scanQRCode();
+    }, 500);
+    
+    setTimeout(() => {
+        if (document.getElementById('confirmPayment')) {
+            document.getElementById('confirmPayment').click();
+        }
+    }, 2000);
+}
+
+// Export functions for global access
+window.SevaPayApp = {
+    generateQRCode,
+    scanQRCode,
+    processPayment,
+    syncOfflineTransactions,
+    runDemo,
+    showAlert
+};
+
+console.log('Amazon Seva Pay - JavaScript loaded successfully!');
