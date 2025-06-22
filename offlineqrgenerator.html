@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Seva Pay - Offline QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF9900;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #FF9900;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(45deg, #FF9900, #FF6600);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 20px 0;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3);
+        }
+        
+        .qr-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        #qr-code {
+            margin: 20px 0;
+        }
+        
+        .transaction-info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        .offline-indicator {
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .queue-status {
+            background: #74b9ff;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛒 Amazon Seva Pay</div>
+        <div class="subtitle">Every Chai Stall Is Your Gateway</div>
+        
+        <div class="offline-indicator">📡 Offline Mode - Processing Locally</div>
+        
+        <form id="transactionForm">
+            <div class="form-group">
+                <label for="orderId">Order ID</label>
+                <input type="text" id="orderId" placeholder="AMZ" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount">Amount (₹)</label>
+                <input type="number" id="amount" placeholder="299" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="customerName">Customer Name</label>
+                <input type="text" id="customerName" placeholder="Priya Sharma" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="priority">Transaction Priority</label>
+                <select id="priority">
+                    <option value="high">High (Urgent)</option>
+                    <option value="medium" selected>Medium (Regular)</option>
+                    <option value="low">Low (Bulk)</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="generate-btn">🔄 Generate Payment QR (Offline)</button>
+        </form>
+        
+        <div id="qrContainer" class="qr-container">
+            <h3>Payment QR Code Generated</h3>
+            <div id="qr-code"></div>
+            
+            <div class="transaction-info">
+                <strong>Transaction Details:</strong><br>
+                <span id="transactionDetails"></span>
+            </div>
+            
+            <div class="queue-status">
+                📊 Queued for Sync | Priority: <span id="queuePriority"></span> | Queue Position: <span id="queuePosition"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Offline Transaction Queue Management
+        class OfflineTransactionQueue {
+            constructor() {
+                this.queue = JSON.parse(localStorage.getItem('sevaPayQueue') || '[]');
+                this.syncAttempts = 0;
+            }
+            
+            addTransaction(transaction) {
+                // Add timestamp and unique ID
+                transaction.id = this.generateTransactionId();
+                transaction.timestamp = Date.now();
+                transaction.status = 'queued';
+                transaction.syncAttempts = 0;
+                
+                // Insert based on priority
+                this.insertByPriority(transaction);
+                this.saveQueue();
+                
+                return transaction;
+            }
+            
+            insertByPriority(transaction) {
+                const priorityValues = { high: 3, medium: 2, low: 1 };
+                const newPriority = priorityValues[transaction.priority];
+                
+                let insertIndex = this.queue.length;
+                for (let i = 0; i < this.queue.length; i++) {
+                    if (priorityValues[this.queue[i].priority] < newPriority) {
+                        insertIndex = i;
+                        break;
+                    }
+                }
+                
+                this.queue.splice(insertIndex, 0, transaction);
+            }
+            
+            generateTransactionId() {
+                return 'TXN_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            getQueuePosition(transactionId) {
+                return this.queue.findIndex(t => t.id === transactionId) + 1;
+            }
+            
+            saveQueue() {
+                localStorage.setItem('sevaPayQueue', JSON.stringify(this.queue));
+            }
+            
+            // Simulate sync attempt (for demo)
+            attemptSync() {
+                console.log(`Attempting to sync ${this.queue.length} transactions...`);
+                // In real implementation, this would try to connect to server
+                return false; // Simulating offline mode
+            }
+        }
+        
+        // QR Code Generator with Encryption-like Features
+        class SecureQRGenerator {
+            static generateSecurePayload(transaction) {
+                // Create a secure payload with hash verification
+                const payload = {
+                    v: '1.0', // version
+                    oid: transaction.orderId,
+                    amt: transaction.amount,
+                    cust: transaction.customerName,
+                    ts: transaction.timestamp,
+                    id: transaction.id,
+                    p: transaction.priority
+                };
+                
+                // Add simple hash for integrity (in production, use proper encryption)
+                payload.h = this.generateHash(JSON.stringify(payload));
+                
+                return btoa(JSON.stringify(payload)); // Base64 encode
+            }
+            
+            static generateHash(data) {
+                // Simple hash function (use proper crypto in production)
+                let hash = 0;
+                for (let i = 0; i < data.length; i++) {
+                    const char = data.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash).toString(16);
+            }
+            
+            static createQRCode(payload, size = 200) {
+                const qr = qrcode(0, 'M');
+                qr.addData(payload);
+                qr.make();
+                
+                return qr.createImgTag(4, 8);
+            }
+        }
+        
+        // Initialize queue
+        const transactionQueue = new OfflineTransactionQueue();
+        
+        // Form submission handler
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const transaction = {
+                orderId: document.getElementById('orderId').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                customerName: document.getElementById('customerName').value,
+                priority: document.getElementById('priority').value
+            };
+            
+            // Add to queue
+            const queuedTransaction = transactionQueue.addTransaction(transaction);
+            
+            // Generate secure QR code
+            const securePayload = SecureQRGenerator.generateSecurePayload(queuedTransaction);
+            const qrImage = SecureQRGenerator.createQRCode(securePayload);
+            
+            // Display QR code and details
+            document.getElementById('qr-code').innerHTML = qrImage;
+            document.getElementById('transactionDetails').innerHTML = `
+                Order: ${transaction.orderId}<br>
+                Amount: ₹${transaction.amount}<br>
+                Customer: ${transaction.customerName}<br>
+                Transaction ID: ${queuedTransaction.id}<br>
+                Generated: ${new Date(queuedTransaction.timestamp).toLocaleString()}
+            `;
+            
+            const queuePosition = transactionQueue.getQueuePosition(queuedTransaction.id);
+            document.getElementById('queuePriority').textContent = transaction.priority.toUpperCase();
+            document.getElementById('queuePosition').textContent = queuePosition;
+            
+            // Show QR container
+            document.getElementById('qrContainer').style.display = 'block';
+            
+            // Auto-generate next order ID
+            const nextOrderNum = parseInt(transaction.orderId.replace('AMZ', '')) + 1;
+            document.getElementById('orderId').value = 'AMZ' + nextOrderNum;
+            
+            console.log('Transaction queued:', queuedTransaction);
+            console.log('Current queue size:', transactionQueue.queue.length);
+        });
+        
+        // Auto-generate initial order ID
+        document.getElementById('orderId').value = 'AMZ' + (Math.floor(Math.random() * 900000) + 100000);
+        
+        // Simulate periodic sync attempts
+        setInterval(() => {
+            if (transactionQueue.queue.length > 0) {
+                const synced = transactionQueue.attemptSync();
+                if (!synced) {
+                    console.log('Sync failed - remaining in offline mode');
+                }
+            }
+        }, 30000); // Try sync every 30 seconds
+        
+        // Display queue stats on load
+        console.log('Seva Pay Offline Mode Initialized');
+        console.log('Queued transactions:', transactionQueue.queue.length);
+    </script>
+</body>
+</html>

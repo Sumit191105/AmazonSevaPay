@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Seva Pay - Ambassador Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            color: #2E7D32;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .ambassador-info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .scan-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .camera-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #video {
+            width: 100%;
+            max-width: 300px;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+        }
+        
+        .transaction-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .earnings-section {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .earnings-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .manual-entry {
+            margin-bottom: 20px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .processed-transactions {
+            background: #f1f8e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .transaction-item {
+            padding: 10px;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏪 Ambassador Dashboard</div>
+            <div style="color: #666; font-size: 14px;">Amazon Seva Pay Partner</div>
+        </div>
+        
+        <div class="ambassador-info">
+            <div style="font-weight: bold; margin-bottom: 5px;">📍 Ramesh Tea Stall</div>
+            <div style="font-size: 14px; color: #666;">Banda, Uttar Pradesh</div>
+            <div style="font-size: 14px; color: #666;">Ambassador ID: AMB001</div>
+        </div>
+        
+        <div id="connectionStatus" class="status offline">
+            📵 Offline Mode - Processing Locally
+        </div>
+        
+        <div class="scan-section">
+            <button class="btn" onclick="toggleCamera()">📱 Start QR Scanner</button>
+            <div class="camera-section" id="cameraSection" style="display: none;">
+                <video id="video" autoplay></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+        </div>
+        
+        <div class="manual-entry">
+            <h4 style="margin-bottom: 15px;">✏️ Manual QR Data Entry (Demo)</h4>
+            <textarea id="qrData" placeholder="Paste QR data here for demo..." rows="3"></textarea>
+            <button class="btn" onclick="processManualQR()">🔍 Process Manual QR</button>
+        </div>
+        
+        <div id="transactionDetails" class="transaction-details">
+            <h4 style="margin-bottom: 15px; color: #2E7D32;">💳 Transaction Details</h4>
+            <div id="detailsContent"></div>
+            <button class="btn" onclick="confirmPayment()" style="margin-top: 15px;">
+                ✅ Confirm Cash Payment Received
+            </button>
+            <button class="btn btn-danger" onclick="cancelTransaction()">
+                ❌ Cancel Transaction
+            </button>
+        </div>
+        
+        <div class="earnings-section">
+            <h4 style="margin-bottom: 15px;">💰 Today's Earnings</h4>
+            <div class="earnings-item">
+                <span>Transactions Processed:</span>
+                <span id="transactionCount">0</span>
+            </div>
+            <div class="earnings-item">
+                <span>Commission Earned:</span>
+                <span id="commissionEarned">₹0</span>
+            </div>
+            <div class="earnings-item">
+                <span>Success Rate:</span>
+                <span id="successRate">100%</span>
+            </div>
+        </div>
+        
+        <div class="processed-transactions">
+            <h4 style="margin-bottom: 15px;">📋 Recent Transactions</h4>
+            <div id="recentTransactions">
+                <p style="color: #666; font-style: italic;">No transactions processed yet today</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isScanning = false;
+        let stream = null;
+        let processedTransactions = [];
+        let currentTransaction = null;
+        let isOnline = false;
+        
+        // Load existing data
+        window.onload = function() {
+            loadProcessedTransactions();
+            updateEarnings();
+            updateConnectionStatus();
+        };
+        
+        function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (isOnline) {
+                statusDiv.className = 'status online';
+                statusDiv.innerHTML = '🌐 Online - Syncing with Amazon';
+            } else {
+                statusDiv.className = 'status offline';
+                statusDiv.innerHTML = '📵 Offline Mode - Processing Locally';
+            }
+        }
+        
+        async function toggleCamera() {
+            if (!isScanning) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' } 
+                    });
+                    const video = document.getElementById('video');
+                    video.srcObject = stream;
+                    document.getElementById('cameraSection').style.display = 'block';
+                    isScanning = true;
+                    
+                    // Start scanning
+                    scanQRCode();
+                    
+                    document.querySelector('.btn').textContent = '🛑 Stop Scanner';
+                } catch (err) {
+                    alert('Camera access denied. Use manual entry for demo.');
+                    console.error('Camera error:', err);
+                }
+            } else {
+                stopCamera();
+            }
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                document.getElementById('cameraSection').style.display = 'none';
+                isScanning = false;
+                document.querySelector('.btn').textContent = '📱 Start QR Scanner';
+            }
+        }
+        
+        function scanQRCode() {
+            if (!isScanning) return;
+            
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    processQRData(code.data);
+                    stopCamera();
+                    return;
+                }
+            }
+            
+            requestAnimationFrame(scanQRCode);
+        }
+        
+        function processManualQR() {
+            const qrData = document.getElementById('qrData').value.trim();
+            if (!qrData) {
+                alert('Please enter QR data');
+                return;
+            }
+            
+            processQRData(qrData);
+        }
+        
+        function processQRData(qrString) {
+            try {
+                const transactionData = JSON.parse(qrString);
+                
+                // Validate transaction data
+                if (!transactionData.orderId || !transactionData.amount || !transactionData.customerName) {
+                    throw new Error('Invalid QR data');
+                }
+                
+                currentTransaction = transactionData;
+                displayTransactionDetails(transactionData);
+                
+            } catch (error) {
+                alert('Invalid QR Code format. Please try again.');
+                console.error('QR processing error:', error);
+            }
+        }
+        
+        function displayTransactionDetails(data) {
+            const detailsDiv = document.getElementById('detailsContent');
+            const commission = calculateCommission(data.amount);
+            
+            detailsDiv.innerHTML = `
+                <div class="detail-row">
+                    <span><strong>Order ID:</strong></span>
+                    <span>${data.orderId}</span>
+                </div>
+                <div class="detail-row">
+                    <span><strong>Customer:</strong></span>
+                    <span>${data.customerName}</span>
+                </div>
+                <div class="detail-row">
+                    <span><strong>Amount:</strong></span>
+                    <span style="font-size: 18px; font-weight: bold; color: #2E7D32;">₹${data.amount}</span>
+                </div>
+                <div class="detail-row">
+                    <span><strong>Priority:</strong></span>
+                    <span style="text-transform: uppercase; color: ${getPriorityColor(data.priority)}">${data.priority}</span>
+                </div>
+                <div class="detail-row">
+                    <span><strong>Your Commission:</strong></span>
+                    <span style="font-weight: bold; color: #4CAF50;">₹${commission}</span>
+                </div>
+                <div class="detail-row">
+                    <span><strong>Transaction Time:</strong></span>
+                    <span>${new Date(data.timestamp).toLocaleTimeString()}</span>
+                </div>
+            `;
+            
+            document.getElementById('transactionDetails').style.display = 'block';
+        }
+        
+        function confirmPayment() {
+            if (!currentTransaction) return;
+            
+            // Calculate commission
+            const commission = calculateCommission(currentTransaction.amount);
+            
+            // Mark transaction as processed
+            const processedTransaction = {
+                ...currentTransaction,
+                processedAt: Date.now(),
+                commission: commission,
+                status: 'processed',
+                ambassadorId: 'AMB001'
+            };
+            
+            processedTransactions.push(processedTransaction);
+            
+            // Save to localStorage (simulating offline storage)
+            localStorage.setItem('ambassadorTransactions', JSON.stringify(processedTransactions));
+            
+            // Update displays
+            updateEarnings();
+            updateRecentTransactions();
+            
+            // Hide transaction details
+            document.getElementById('transactionDetails').style.display = 'none';
+            document.getElementById('qrData').value = '';
+            
+            alert(`✅ Payment Confirmed!\nCommission Earned: ₹${commission}\nTransaction queued for sync.`);
+            
+            currentTransaction = null;
+        }
+        
+        function cancelTransaction() {
+            document.getElementById('transactionDetails').style.display = 'none';
+            document.getElementById('qrData').value = '';
+            currentTransaction = null;
+            alert('❌ Transaction cancelled');
+        }
+        
+        function calculateCommission(amount) {
+            // Commission structure: 2-3% or minimum ₹5
+            const commissionRate = amount > 500 ? 0.03 : 0.02;
+            const commission = Math.max(5, Math.round(amount * commissionRate));
+            return commission;
+        }
+        
+        function getPriorityColor(priority) {
+            switch(priority) {
+                case 'high': return '#d32f2f';
+                case 'medium': return '#f57c00';
+                case 'low': return '#388e3c';
+                default: return '#666';
+            }
+        }
+        
+        function updateEarnings() {
+            const totalTransactions = processedTransactions.length;
+            const totalCommission = processedTransactions.reduce((sum, t) => sum + (t.commission || 0), 0);
+            
+            document.getElementById('transactionCount').textContent = totalTransactions;
+            document.getElementById('commissionEarned').textContent = `₹${totalCommission}`;
+            document.getElementById('successRate').textContent = '100%'; // Simplified for demo
+        }
+        
+        function updateRecentTransactions() {
+            const recentDiv = document.getElementById('recentTransactions');
+            
+            if (processedTransactions.length === 0) {
+                recentDiv.innerHTML = '<p style="color: #666; font-style: italic;">No transactions processed yet today</p>';
+                return;
+            }
+            
+            const recentTransactions = processedTransactions.slice(-5).reverse();
+            recentDiv.innerHTML = recentTransactions.map(t => `
+                <div class="transaction-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span><strong>${t.orderId}</strong></span>
+                        <span style="color: #4CAF50; font-weight: bold;">₹${t.amount}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666;">
+                        <span>${t.customerName}</span>
+                        <span>Commission: ₹${t.commission}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadProcessedTransactions() {
+            const saved = localStorage.getItem('ambassadorTransactions');
+            if (saved) {
+                processedTransactions = JSON.parse(saved);
+                updateRecentTransactions();
+            }
+        }
+        
+        // Demo: Add sample QR data button
+        setTimeout(() => {
+            const sampleBtn = document.createElement('button');
+            sampleBtn.innerHTML = '🎯 Load Sample QR (Demo)';
+            sampleBtn.className = 'btn';
+            sampleBtn.style.background = '#2196F3';
+            sampleBtn.style.marginTop = '10px';
+            sampleBtn.onclick = () => {
+                const sampleQR = JSON.stringify({
+                    orderId: "AMZ789456123",
+                    amount: 299,
+                    priority: "medium",
+                    customerName: "Priya Sharma",
+                    timestamp: Date.now(),
+                    hash: "a1b2c3d4e5f6"
+                });
+                document.getElementById('qrData').value = sampleQR;
+            };
+            document.querySelector('.manual-entry').appendChild(sampleBtn);
+            
+            // Network toggle for demo
+            const toggleBtn = document.createElement('button');
+            toggleBtn.innerHTML = '🔄 Toggle Network (Demo)';
+            toggleBtn.className = 'btn';
+            toggleBtn.style.background = '#666';
+            toggleBtn.style.marginTop = '10px';
